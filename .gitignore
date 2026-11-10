@@ -1,0 +1,7 @@
+# Local secrets (FRED and Census API keys). Never committed; see .env.example.
+.env
+# Built site (scripts/build_site.py writes it; the Pages workflow rebuilds it).
+_site/
+.venv/
+__pycache__/
+.DS_Store

@@ -1,0 +1,2 @@
+# Builds the page from content/sections/*.md (scripts/build_site.py).
+markdown==3.9
