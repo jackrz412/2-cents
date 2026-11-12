@@ -4,13 +4,17 @@
 import * as prices from "./prices.js";
 import * as changes from "./changes.js";
 import * as states from "./states.js";
+import * as scale from "./scale.js";
 import * as wealth from "./wealth.js";
 import * as debt from "./debt.js";
 import * as spending from "./spending.js";
 import * as foreign from "./foreign.js";
+import * as globe from "./globe.js";
+import * as poverty from "./poverty.js";
 
-const CHARTS = { "chart-1a": prices, "chart-1b": changes, "map-1": states, "chart-2a": wealth,
-  "chart-3a": debt, "chart-3b": spending, "chart-3c": foreign };
+const CHARTS = { "chart-1a": prices, "chart-1b": changes, "map-1": states, "scale-2": scale, "chart-2a": wealth,
+  "chart-3a": debt, "chart-3b": spending, "chart-3c": foreign,
+  globe, "chart-4a": poverty };
 
 for (const [id, chart] of Object.entries(CHARTS)) {
   const figure = document.getElementById(id);

@@ -77,6 +77,13 @@
     <section id="wealth" data-nav-label="Wealth">
       <h2>Wealth concentration</h2>
       {{section:wealth}}
+      <figure class="chart" id="scale-2">
+        <figcaption>
+          <h3 class="chart-title">How far apart a million and a billion are</h3>
+          <p class="chart-sub">Five amounts on one ordinary number line, starting at $0. Drag the slider, or press play, to zoom out.</p>
+        </figcaption>
+        <p class="chart-source">Round amounts for scale, not data.</p>
+      </figure>
       <figure class="chart" id="chart-2a">
         <figcaption>
           <h3 class="chart-title">Who owns the household wealth</h3>
@@ -119,8 +126,20 @@
     <section id="richest" data-nav-label="Richest">
       <h2>Still the richest nation on earth</h2>
       {{section:richest}}
-      <figure class="chart-slot chart-slot--globe" id="globe"><figcaption>Globe: GDP per capita by country</figcaption></figure>
-      <figure class="chart-slot" id="chart-4a"><figcaption>Chart 4a: relative poverty in rich countries</figcaption></figure>
+      <figure class="chart" id="globe">
+        <figcaption>
+          <h3 class="chart-title">How rich the US is, by world standards</h3>
+          <p class="chart-sub">GDP per person at purchasing power parity, or the share of people in extreme poverty, by country. Drag to spin, scroll or pinch to zoom, hover or tap a country.</p>
+        </figcaption>
+        <p class="chart-source">Source: World Bank, World Development Indicators (NY.GDP.PCAP.PP.KD) and Poverty and Inequality Platform (SI.POV.DDAY). Country shapes: Natural Earth. Small countries such as Singapore don't show at this scale; they're in the table.</p>
+      </figure>
+      <figure class="chart chart--small" id="chart-4a">
+        <figcaption>
+          <h3 class="chart-title">Relative poverty in rich countries</h3>
+          <p class="chart-sub">Share of people with disposable income below half their country's median, latest year available ({{fact:oecd_count}} OECD countries)</p>
+        </figcaption>
+        <p class="chart-source">Source: OECD Income Distribution Database (poverty rate after taxes and transfers, 50% of median).</p>
+      </figure>
     </section>
 
     <footer id="methods" class="methods">

@@ -3,7 +3,7 @@
     "as_of": "October 2026",
     "dataset": "Consumer Price Index for All Urban Consumers (CPI-U), U.S. city average",
     "id": "bls_cpi",
-    "notes": "Lines (Chart 1a) use seasonally adjusted series (CUSR...); bars (Chart 1b) use not seasonally adjusted series (CUUR...), latest 12 months vs. the 2000 average.",
+    "notes": "Lines (Chart 1a) use seasonally adjusted series (CUSR...); bars (Chart 1b) use not seasonally adjusted series (CUUR...), latest 12 months vs. the base-year average (2000, or 1985 in the longer view).",
     "publisher": "U.S. Bureau of Labor Statistics",
     "retrieved": "2026-11-12",
     "series": [

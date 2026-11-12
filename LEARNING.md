@@ -68,6 +68,18 @@ concrete; newest phase at the bottom of each list.
 - **Nominal vs. % of GDP.** Nominal dollars are the face value each year (not adjusted for inflation). % of GDP divides by the size of the economy, so 1945 and 2025 are comparable. Chart 3b offers both because they tell different parts of the story.
 - **Reusable component.** One piece of code used in several places with different settings. `site/js/charts/timeline.js` draws Charts 3a, 3b and 3c from an options object (series, axis, annotations, end labels).
 
+### Phase 4
+
+- **WebGL / Three.js / globe.gl.** WebGL is the browser's interface to the graphics chip, for drawing 3D. Three.js is the standard library on top of it; globe.gl is a library on top of Three.js that draws a globe with country shapes. Loaded from jsDelivr at a pinned version.
+- **Lazy loading.** Fetching something only when it's needed. globe.gl is about 1.8 MB, so `globe.js` loads it only when the reader scrolls within a screen of the globe.
+- **Feature detection / graceful fallback.** Checking whether the browser can do something (here: create a WebGL context) instead of guessing from its name, and showing something simpler if not. Without WebGL, or if globe.gl fails to load, the page draws a flat D3 world map.
+- **GeoJSON.** The plain (not TopoJSON) format for map shapes: each country a feature with an id, properties and coordinates. `site/geo/countries-110m.json`.
+- **Map projection (`geoNaturalEarth1`).** The flat fallback uses Natural Earth projection, a compromise that keeps both shapes and areas reasonable for a whole-world map.
+- **OrbitControls / auto-rotate.** The Three.js camera control behind drag-to-spin and scroll-to-zoom. `autoRotate` turns the globe slowly until the first drag, scroll or tap.
+- **`prefers-reduced-motion`.** A setting people turn on when motion makes them dizzy. The globe respects it: no auto-rotate and no animated transitions.
+- **`aria-live`.** Marks a part of the page whose text changes, so screen readers announce the new text. The coins-per-person line uses it.
+- **Largest remainder rounding.** Rounding parts so they still add up to the whole: round everything down, then give the leftover units to the parts with the biggest fractions. The 100-coin graphic uses it.
+
 ## Decision log
 
 ### Phase 0
@@ -134,8 +146,11 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 2.9 | Chart 2b (asset composition) not built | Build it from the DFA CSV | First on the spec's cut list, and it needs a new fetcher (the DFA CSV isn't on FRED). Kept in "Next". |
 | 2.10 | The build adds a content fingerprint (`?v=…`) to the stylesheet, scripts, module imports and data requests; key SVG attributes (`fill="none"` on lines, transparent hit areas) are set in JavaScript as well as CSS | Tell readers to hard-refresh; a no-cache dev server | A cached old `styles.css` with new scripts drew Chart 1a as black streaks and Chart 1b as black blocks (Jack saw this; the map was fine because its colors are set in the script). Versioned URLs fix it for everyone, including GitHub Pages' 10-minute cache, and the attributes mean a missing stylesheet gives plain black-and-white charts, not black shapes. |
 | 2.11 | Charts 1a and 1b get a "Since 2000 / Since 1985" switch; 2000 stays the default and the base for the prose's facts (1985 facts get their own keys, e.g. `cpi_pct_since_1985`). The two switches are synced | One base year; 1985 as the default; a switch on 1a only | 2000 was the spec's choice, not a data constraint. A second base year is a robustness check: if core costs outrun wages from both starts, the point doesn't depend on a chosen year. (Picking a start year for drama would be cherry-picking.) Synced switches keep the two charts on the same span. 1985 is as far back as all six 1a lines go cleanly (rent from 1981, wages from 1979). |
-| 2.12 | In the 1985 view, Chart 1b keeps the categories BLS didn't track yet as gray rows at the bottom, under a "No data back to 1985" divider, with the month each series starts; the table shows "—" | Drop them from the 1985 view; keep them in sorted order with empty bars | Dropping them would silently change what's being compared between views. Grouping them at the bottom keeps the 1985 ranking clean. The pipeline decides which items are missing (no full base year), so nothing is hard-coded. |
+| 2.12 | In the 1985 view, Chart 1b keeps the categories BLS didn't track yet as gray rows at the bottom, under a "No data back to 1985" divider, with the month each series starts; the table shows "—" | Drop them from the 1985 view; keep them in sorted order with empty bars | Dropping them would silently change what's being compared between views. Grouping them at the bottom keeps the 1985 ranking clean. The pipeline decides which items are missing (no full base year), so nothing is hard-coded. In the November 2026 refresh four were missing: day care and preschool (BLS series starts Dec 1990) and computer software, computers, and phones (all Dec 1997). |
 | 2.13 | Wages stay as the median; removing the top 10% wasn't added as a filter | A "median excluding the top 10%" line | A median barely moves when the top 10% is removed: it becomes the 45th percentile of all workers. BLS's percentile series (FRED, from 2000) bracket it: 25th percentile +115% since 2000, median +109% (annual averages, 2000 to 2025). That's a few points, not a different story. The top 10% matters for an *average*, not a median. |
+| 2.14 | Chart 2a gets a companion graphic below it: 100 people (1 / 9 / 40 / 50) beside 100 coins split by the latest quarter's wealth shares, same blue ramp; hovering a group highlights it in both grids; a text key gives the counts | Figures placed beside each band of the area chart | Jack's idea. Beside the bands didn't fit: the bottom 50%'s band is 2–4% tall, too thin for 50 figures. Coins are whole numbers that must add to 100, so shares are rounded by largest remainder (32.5% shows as 33 coins); the tooltip and table keep the exact share. Polish (Jack's request): centered under the chart, and the key became toggle buttons (`aria-pressed`) that pin a group's highlight in both grids; hover previews it. Then: a switch between the first quarter (Q3 1989) and the latest, with the coins that change group animating over; a coins-per-person line ("about 710×" now, 330× in 1989, from exact shares, rounded to 2 significant figures); a one-time fill-in animation on first view; and the picked group also highlights its band in the area chart. All motion is skipped with reduced motion. |
+| 2.15 | In Chart 1b, the wage rule is drawn above the bars but below the labels, and the labels get a thin halo in the page color | Move the wage label to the side; draw the rule behind the bars | In the 1985 view, wages (+260%) land right where several value labels sit (+230%, +208%). A halo keeps both readable without hiding the rule inside the bars. |
+| 2.16 | A number line ($10K, $100K, $1M, $1B, $100B) opens the wealth section: one linear line from $0, with a slider (and a Play button) that zooms out so the smaller amounts squeeze into $0 | A log-scale axis; a static graphic | A log axis spaces each tenfold step evenly, which hides exactly the point being made. A plain line can't show all five at once, so the zoom does the work. The slider is log-scaled so each tenfold step gets equal slider travel. Round amounts for scale, labeled as not data; the "1 inch → 158 miles" line is computed in code. Play is hidden under reduced motion. |
 
 ### Phase 3
 
@@ -148,6 +163,17 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 3.5 | End-label connectors drawn in muted gray, with a short colored key beside each label (also in Chart 1a) | Connectors in the series color | Reviewing Chart 3b, a colored connector bending down to a spread-apart label looked like the line itself dropping. Gray connectors can't be mistaken for data. |
 | 3.6 | "Can the US default?" drafted as `content/sections/debt_default.md` in an aside, no numbers or named events | Write it in Phase 5 with the rest of the prose | It's a Phase 3 deliverable in the spec. Kept conceptual (borrowing in your own currency, debt ceiling, interest costs, inflation, demand for Treasuries) and neutral; Jack reviews the wording in Phase 5. |
 
+### Phase 4
+
+| # | Decision | Alternatives | Why |
+|---|---|---|---|
+| 4.1 | Country shapes: Natural Earth 1:110m, slimmed by `scripts/vendor_countries.py` to id + name (169 KB), joined on `ISO_A3_EH`, Kosovo set to `XKX` | world-atlas TopoJSON (numeric UN codes); Natural Earth 1:50m | Natural Earth carries ISO3 codes, so it joins to the World Bank's directly. 1:110m is light enough for a phone and detailed enough at globe scale; small states missing at this scale are in the table. |
+| 4.2 | globe.gl 2.46.2 loaded lazily; flat D3 map (Natural Earth projection) if WebGL is missing or the script fails | Load with the page; a static image as the fallback | 1.8 MB shouldn't delay the first three sections. A D3 fallback keeps the same colors, tooltip and legend and stays up to date with the data, which an image wouldn't. |
+| 4.3 | Fixed breaks. GDP per person: $5K / 10K / 20K / 40K / 60K (each class roughly doubles). Extreme poverty: 1 / 5 / 15 / 30 / 50%. GDP in the blue ramp, poverty in the warm ramp, both the same in light and dark mode | Quantiles; a log-continuous scale | Fixed breaks keep meaning across refreshes, as on the state map. Doubling steps suit income, which spans 100× across countries. Different hues for the two metrics so a switch is never misread as the same scale. |
+| 4.4 | The globe starts over North America and auto-rotates slowly until the reader drags, scrolls or taps; no auto-rotate with reduced motion; tap shows the tooltip on touch screens | Start over the Atlantic; always rotate | The US is the subject. Stopping on first touch means it stays where the reader put it. |
+| 4.5 | Chart 4a: the US bar in the accent blue, every other country gray, US value labeled, OECD median as a rule | 37 bars in one color with every value labeled | The story is one country against the rest; graying the rest makes the US bar stand out without a legend. All values are in the tooltip and table. |
+| 4.6 | Extruded country heights (cut list item 3) not built | Height by GDP | Flat colors already read clearly, and extrusion makes small countries harder to hover. Kept in "Next". |
+
 ## Next (ideas, out of scope for v1)
 
 - AI chat over the data.
@@ -155,5 +181,6 @@ Series ID changes from the spec's candidate table (spec rule 5):
 - Scrollytelling (charts that change as you scroll).
 - County-level data and state drill-downs.
 - A light/dark toggle button.
-- Chart 2a clarity (Jack's idea, Phase 5 polish): a "100 people" pictogram beside the wealth chart, with figures split 1 / 9 / 40 / 50 by group, ideally paired with 100 coins split by wealth share (now 32 / 36 / 29 / 2) for the latest quarter.
+- Globe: extruded countries (height by value).
 - Chart 2b: asset composition by wealth group (equities vs. real estate), from the Fed's DFA CSV.
+- Chart 1a: 10th and 90th percentile wage lines (BLS usual weekly earnings percentiles via FRED, the LEU02529112-15 series; verify IDs before use. Since 2000 view only, as they start in 2000). See decision 2.13.

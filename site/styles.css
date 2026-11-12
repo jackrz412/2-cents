@@ -87,6 +87,9 @@
   --wealth-1-ink: #fff; --wealth-2-ink: #fff; --wealth-3-ink: #0b0b0b; --wealth-4-ink: #0b0b0b;
   --grid: #e4dfd4;
   --grid-base: #b9b3a6;
+  /* Maps: countries/states without data, and the globe's ocean and edges. */
+  --map-na: #a9a59c;
+  --globe-ocean: #d5dbe0; --globe-atmosphere: #c9d6e3; --globe-side: #b9b3a6; --globe-border: #faf8f3;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -115,7 +118,8 @@
     --series-ref: #8f8d86; --rise: #d95926; --fall: #3987e5;
     --wealth-1: #9ec5f4; --wealth-2: #5598e7; --wealth-3: #2a78d6; --wealth-4: #184f95;
     --wealth-1-ink: #0b0b0b; --wealth-2-ink: #0b0b0b; --wealth-3-ink: #fff; --wealth-4-ink: #fff;
-    --grid: #2c2c2a; --grid-base: #55554f;
+    --grid: #2c2c2a; --grid-base: #55554f; --map-na: #3a3a37;
+    --globe-ocean: #1a1a19; --globe-atmosphere: #2b3a4c; --globe-side: #3a3a37; --globe-border: #0d0d0d;
   }
 }
 :root[data-theme="dark"] {
@@ -127,7 +131,8 @@
   --series-ref: #8f8d86; --rise: #d95926; --fall: #3987e5;
   --wealth-1: #9ec5f4; --wealth-2: #5598e7; --wealth-3: #2a78d6; --wealth-4: #184f95;
   --wealth-1-ink: #0b0b0b; --wealth-2-ink: #0b0b0b; --wealth-3-ink: #fff; --wealth-4-ink: #fff;
-  --grid: #2c2c2a; --grid-base: #55554f;
+  --grid: #2c2c2a; --grid-base: #55554f; --map-na: #3a3a37;
+    --globe-ocean: #1a1a19; --globe-atmosphere: #2b3a4c; --globe-side: #3a3a37; --globe-border: #0d0d0d;
 }
 
 * { box-sizing: border-box; }
@@ -263,8 +268,12 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 
 /* Chart 1b bars */
 .chart .bar-row .hit { fill: transparent; }
+.chart .bar-labels { pointer-events: none; }
 .chart .bar-row .label { fill: var(--color-text); }
 .chart .bar-row .value { fill: var(--color-muted); }
+/* A halo in the page color, so a reference rule passing behind a label
+   never cuts through the text. */
+.chart .bar-row text { stroke: var(--color-bg); stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; }
 .chart .bar-row:hover .bar { filter: brightness(1.12); }
 .chart .ref-line line { stroke: var(--series-ink); stroke-width: 1.5; }
 .chart .ref-line text { fill: var(--color-text); font-weight: 600; }
@@ -309,7 +318,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .map-legend { font-size: var(--text-sm); }
 .legend-title { margin: 0 0 var(--space-1); color: var(--color-muted); }
 .legend-scale { display: flex; flex-wrap: wrap; gap: 2px; }
-.legend-cell { display: flex; flex-direction: column; gap: 2px; min-width: 64px; }
+.legend-cell { display: flex; flex-direction: column; gap: 2px; min-width: 72px; }
 .legend-cell .legend-swatch { width: 100%; height: 10px; border-radius: 0; }
 .legend-tick { color: var(--color-muted); font-variant-numeric: tabular-nums; font-size: 12px; }
 
@@ -372,3 +381,73 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .callout p { margin: 0 0 var(--space-3); }
 .callout ul { margin: 0; padding-left: 1.2em; }
 .callout li + li { margin-top: var(--space-2); }
+
+/* Chart 2a companion: 100 people and 100 coins, centered under the chart. */
+.pictogram {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--color-border);
+}
+.picto-heading { margin: 0; max-width: 34rem; font: 600 var(--text-base)/var(--leading-tight) var(--font-serif); }
+.picto-when { margin: var(--space-1) 0 var(--space-4); font-size: var(--text-sm); color: var(--color-muted); }
+.pictogram svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+.pictogram .picto-title { fill: var(--color-muted); font: 12px var(--font-sans); }
+.pictogram .unit { cursor: pointer; transition: opacity 0.15s; }
+.pictogram .unit.dim { opacity: 0.18; }
+.pictogram .coin-ring { stroke: var(--color-bg); stroke-width: 0.6; }
+@media (prefers-reduced-motion: reduce) { .pictogram .unit { transition: none; } }
+/* Key buttons: same pill shape as the chart chips, a little larger. */
+.picto-key { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin-top: var(--space-4); }
+.picto-button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 40px; padding: 6px 16px; border-radius: 999px;
+  font: var(--text-sm)/1.2 var(--font-sans); color: var(--color-muted);
+  background: var(--color-bg); border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.1s;
+}
+.picto-button strong { color: var(--color-text); font-weight: 600; }
+.picto-button:hover { border-color: var(--color-muted); background: var(--color-surface); }
+.picto-button:active { transform: translateY(1px); }
+.picto-button[aria-pressed="true"] { border-color: var(--color-text); background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-text); }
+.picto-button .legend-swatch { width: 14px; height: 14px; border-radius: 50%; }
+@media (max-width: 560px) { .picto-button { flex: 1 1 100%; max-width: 20rem; } }
+
+/* Section 4: globe and its flat fallback */
+.globe-plot { min-height: 360px; cursor: grab; }
+.globe-plot:active { cursor: grabbing; }
+@media (min-width: 500px) { .globe-plot { min-height: 460px; } }
+.globe-plot canvas { display: block; outline: none; }
+.chart .countries path { stroke: var(--color-bg); stroke-width: 0.5; }
+.chart .sphere { fill: var(--globe-ocean); }
+.chart-note { font-size: var(--text-sm); color: var(--color-muted); font-style: italic; margin: 0 0 var(--space-2); }
+.legend-na { display: block; margin-top: 4px; font-size: 12px; color: var(--color-muted); }
+/* Chart 4a: the US bar's label in bold */
+.chart .bar-row.focus .label { font-weight: 600; }
+.picto-switch { margin-bottom: var(--space-4); }
+.picto-stat { margin: var(--space-4) 0 0; max-width: 32rem; min-height: 3.2em; font-size: var(--text-md); }
+.picto-stat strong { font-weight: 600; }
+/* The area chart's bands follow the group picked in the graphic. */
+.chart .areas path { transition: opacity 0.15s; }
+.chart .areas path.dim { opacity: 0.25; }
+@media (prefers-reduced-motion: reduce) { .chart .areas path { transition: none; } }
+
+/* Number line (wealth section): play button, zoom slider, readout. */
+.scale-controls { align-items: center; flex-wrap: nowrap; }
+.scale-play {
+  flex: none; min-width: 5.5rem; min-height: 40px; padding: 6px 16px; border-radius: 999px;
+  font: 600 var(--text-sm)/1.2 var(--font-sans); color: var(--color-bg);
+  background: var(--color-text); border: 1px solid var(--color-text); cursor: pointer;
+}
+.scale-play[aria-pressed="true"] { color: var(--color-text); background: var(--color-bg); }
+.scale-controls input[type="range"] { flex: 1; min-width: 0; min-height: 40px; accent-color: var(--color-text); }
+.scale-end { flex: none; font-size: var(--text-sm); color: var(--color-muted); }
+@media (max-width: 560px) { .scale-end { display: none; } }
+.chart .scale-axis { stroke: var(--color-text); stroke-width: 2; }
+.chart .scale-arrow { fill: none; stroke: var(--color-muted); stroke-width: 1.5; }
+.chart .scale-ends line { stroke: var(--color-muted); }
+.chart .scale-mark circle, .chart .scale-pile { fill: var(--series-1); stroke: var(--color-bg); stroke-width: 2; }
+.chart .scale-mark .stem { stroke: var(--grid); }
+.chart .scale-mark text { fill: var(--color-text); font-weight: 600; }
+.chart .scale-pile-label { fill: var(--color-muted); font-size: var(--text-sm); }
+.chart-plot.scale-plot { min-height: 0; }
+.scale-readout { min-height: 3em; margin: var(--space-2) 0; font-size: var(--text-sm); }

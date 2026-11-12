@@ -335,9 +335,9 @@ def main():
     pop = {c: v for c, v in worldbank.fetch(POPULATION).items() if c in names_wb}
     # Rank everyone in one year: the latest year most countries have reported.
     rank_year = statistics.mode(max(v) for v in gdp.values())
-    in_year = sorted(((v[rank_year], c) for c, v in gdp.items() if rank_year in v), reverse=True)
-    rank = {c: i + 1 for i, (_, c) in enumerate(in_year)}
-    big = [c for _, c in in_year if pop.get(c) and pop[c][max(pop[c])] >= 10_000_000]
+    ranked = sorted(((v[rank_year], c) for c, v in gdp.items() if rank_year in v), reverse=True)
+    rank = {c: i + 1 for i, (_, c) in enumerate(ranked)}
+    big = [c for _, c in ranked if pop.get(c) and pop[c][max(pop[c])] >= 10_000_000]
 
     world = {}
     for c in sorted(names_wb):
@@ -352,13 +352,13 @@ def main():
             row["population"] = pop[c][max(pop[c])]
         if len(row) > 1:
             world[c] = row
-    write_json("world", {"gdp_rank_year": rank_year, "gdp_rank_count": len(in_year),
+    write_json("world", {"gdp_rank_year": rank_year, "gdp_rank_count": len(ranked),
                          "poverty_line": "$3.00 a day (2021 PPP)", "countries": world})
     summarize("world", len(world), "GDP pc rank year", rank_year)
     usa = world["USA"]
     facts.update({
         "us_gdp_pc": f"{usa['gdp_pc']:,}", "us_gdp_pc_year": usa["gdp_year"],
-        "us_gdp_rank": rank["USA"], "gdp_rank_count": len(in_year), "gdp_rank_year": rank_year,
+        "us_gdp_rank": rank["USA"], "gdp_rank_count": len(ranked), "gdp_rank_year": rank_year,
         "us_gdp_rank_pop10m": big.index("USA") + 1, "pop10m_count": len(big),
         "us_poverty_3usd": usa["poverty"], "us_poverty_year": usa["poverty_year"],
         "poverty_line": "$3.00 a day (2021 PPP)",

@@ -96,16 +96,20 @@ export async function render(figure) {
     rows.append("rect").attr("class", "hit").attr("fill", "transparent")
       .attr("x", 0).attr("width", width).attr("y", (d) => y(d.key) - 2).attr("height", y.step());
     rows.append("path").attr("class", "bar").attr("d", bar).style("fill", colorOf);
-    rows.append("text").attr("class", "label").call(labelAt);
+    // Names and values in their own layer above the bars, so the wage rule
+    // can sit between the two.
+    const text = svg.append("g").attr("class", "bar-labels")
+      .selectAll("g").data(items).join("g").attr("class", "bar-row");
+    text.append("text").attr("class", "label").call(labelAt);
     // Value at the tip, outside the bar.
-    rows.append("text").attr("class", "value")
+    text.append("text").attr("class", "value")
       .attr("x", (d) => x(d.pct) + (d.pct >= 0 ? 6 : -6))
       .attr("y", mid).attr("dy", "0.32em")
       .attr("text-anchor", (d) => (d.pct >= 0 ? "start" : "end"))
       .text((d) => fmt.pct(d.pct));
     // Negative bars run left into the label column, so their value goes
     // just right of zero instead of off the bar's end.
-    rows.filter((d) => d.pct < 0).select(".value")
+    text.filter((d) => d.pct < 0).select(".value")
       .attr("x", x(0) + 6).attr("text-anchor", "start");
 
     // "No data" rows: a hairline divider with a heading, then each category
@@ -124,7 +128,8 @@ export async function render(figure) {
 
     // Wage reference line, labeled at the bottom of the data rows.
     const wx = x(wage);
-    const ref = svg.append("g").attr("class", "ref-line");
+    // Drawn above the bars but below their labels (see the halo in styles.css).
+    const ref = svg.insert("g", ".bar-labels").attr("class", "ref-line");
     ref.append("line").attr("x1", wx).attr("x2", wx).attr("y1", m.top - 2).attr("y2", dataBottom);
     ref.append("text").attr("x", wx + 4).attr("y", dataBottom - 6)
       .text(`Wages ${fmt.pct(wage)}`);

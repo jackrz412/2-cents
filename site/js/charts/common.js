@@ -242,3 +242,27 @@ export function onWidth(el, draw) {
 export function token(el, name) {
   return getComputedStyle(el).getPropertyValue(name).trim();
 }
+
+// Legend for a threshold color scale: a title, then one swatch per class
+// with its range ("< 3×", "3×–4×", ..., "6×+"). colors has one more entry
+// than breaks; tick formats a break value.
+export function thresholdLegend(el, title, colors, breaks, tick) {
+  const t = document.createElement("p");
+  t.className = "legend-title";
+  t.textContent = title;
+  const row = document.createElement("div");
+  row.className = "legend-scale";
+  colors.forEach((c, i) => {
+    const cell = document.createElement("span");
+    cell.className = "legend-cell";
+    const sw = document.createElement("span");
+    sw.className = "legend-swatch";
+    sw.style.background = c;
+    const label = document.createElement("span");
+    label.className = "legend-tick";
+    label.textContent = i === 0 ? `< ${tick(breaks[0])}` : i === breaks.length ? `${tick(breaks[i - 1])}+` : `${tick(breaks[i - 1])}–${tick(breaks[i])}`;
+    cell.append(sw, label);
+    row.append(cell);
+  });
+  el.replaceChildren(t, row);
+}

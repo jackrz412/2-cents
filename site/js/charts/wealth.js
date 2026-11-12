@@ -2,7 +2,7 @@
 // 100%. The top 1% sits on the baseline, so its growth reads against a flat
 // edge; groups are ordered, so they take one blue ramp (darkest = top 1%)
 // rather than four unrelated hues. A crosshair tooltip lists all four.
-import { load, fmt, parseDate, scaffold, fillTable, onWidth, showTip, moveTip, hideTip, screenPoint } from "./common.js";
+import { load, fmt, parseDate, scaffold, fillTable, segmented, onWidth, showTip, moveTip, hideTip, screenPoint } from "./common.js";
 
 const GROUPS = [
   { key: "top1", label: "Top 1%", fill: "var(--wealth-1)", ink: "var(--wealth-1-ink)" },
@@ -29,6 +29,12 @@ export async function render(figure) {
   }
   controls.append(legend);
 
+  // Companion graphic below the chart: 100 people and 100 coins, for the
+  // first or the latest quarter. It redraws with the chart's width.
+  const picto = document.createElement("div");
+  picto.className = "pictogram";
+  plot.after(picto);
+
   // Table: the last quarter of each year (Q4, or the latest quarter).
   const yearly = d3.groups(rows, (r) => r.date.getUTCFullYear()).map(([, rs]) => rs[rs.length - 1]);
   fillTable(table, [
@@ -40,6 +46,8 @@ export async function render(figure) {
   const series = d3.stack().keys(GROUPS.map((g) => g.key))(rows);
 
   let focusIndex = rows.length - 1;
+  onWidth(picto, (width) => drawPictogram(picto, width, first, last));
+
   onWidth(plot, (width) => {
     const height = Math.max(260, Math.min(380, width * 0.55));
     const m = { top: 8, right: 12, bottom: 28, left: 40 };
@@ -54,9 +62,10 @@ export async function render(figure) {
         ". Use the left and right arrow keys to read values by quarter.");
 
     const area = d3.area().x((d) => x(d.data.date)).y0((d) => y(d[0])).y1((d) => y(d[1]));
-    svg.append("g").attr("class", "areas")
+    bands = svg.append("g").attr("class", "areas")
       .selectAll("path").data(series).join("path")
       .attr("d", area).style("fill", (s, i) => GROUPS[i].fill);
+    highlightBands(pinned); // keep a group picked in the graphic below highlighted
 
     svg.append("g").attr("class", "axis")
       .selectAll("text").data([0, 25, 50, 75, 100]).join("text")
@@ -112,4 +121,198 @@ export async function render(figure) {
 
     plot.replaceChildren(svg.node());
   });
+}
+
+// --- "100 people, 100 coins" ---------------------------------------------------
+// Two 10x10 grids. People are split by the size of each group (1 / 9 / 40 /
+// 50: fixed by definition); coins by each group's share of total net worth,
+// rounded to whole coins so they add to exactly 100 (largest remainder:
+// round down, then give the leftover coins to the groups with the biggest
+// fractions). A switch shows the first quarter (1989) or the latest, and the
+// coins that change hands animate over. Picking a group highlights it in both
+// grids and in the area chart above, and states its coins per person.
+const PEOPLE = { top1: 1, next9: 9, next40: 40, bottom50: 50 };
+// State shared across redraws (window resizes) and with the area chart.
+let pinned = null;      // the group a key button has pinned, or null
+let view = "last";      // "first" (1989) or "last" (latest quarter)
+let introDone = false;  // the fill-in animation runs once per page view
+let bands = null;       // the area chart's band paths
+const highlightBands = (key) => bands?.classed("dim", (s) => key != null && s.key !== key);
+const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function wholeCoins(row) {
+  const raw = GROUPS.map((g) => ({ key: g.key, v: row[g.key] * 100 / d3.sum(GROUPS, (h) => row[h.key]) }));
+  raw.forEach((r) => { r.n = Math.floor(r.v); });
+  let left = 100 - d3.sum(raw, (r) => r.n);
+  [...raw].sort((a, b) => (b.v - b.n) - (a.v - a.n)).forEach((r) => { if (left > 0) { r.n += 1; left -= 1; } });
+  return Object.fromEntries(raw.map((r) => [r.key, r.n]));
+}
+
+// Icons in a 10x10 unit box: a person (head and shoulders) and a coin
+// (the page's penny motif: a disc with an inner ring).
+const PERSON = "M5,1.2a2,2 0 1 1 0,4a2,2 0 1 1 0,-4ZM1.6,9.4C1.6,7.2 3.1,5.9 5,5.9S8.4,7.2 8.4,9.4Z";
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const shortName = (g) => g.label.split(" (")[0];
+
+function drawPictogram(el, width, firstRow, lastRow) {
+  const rowOf = () => (view === "first" ? firstRow : lastRow);
+  const groupsFor = (row) => {
+    const coins = wholeCoins(row);
+    return GROUPS.map((g) => ({ ...g, people: PEOPLE[g.key], coins: coins[g.key], share: row[g.key] }));
+  };
+  let groups = groupsFor(rowOf());
+  const byKey = () => new Map(groups.map((g) => [g.key, g]));
+
+  const gap = width < 420 ? 16 : 40;
+  const cell = Math.max(12, Math.min(22, Math.floor((width - gap) / 20)));
+  const side = cell * 10;
+  const titleH = 22;
+  const total = side * 2 + gap;
+  const at = (i) => `translate(${(i % 10) * cell},${Math.floor(i / 10) * cell}) scale(${cell / 10})`;
+
+  // One unit per cell, in reading order, group by group (top 1% first).
+  // Each unit carries only its group key; counts are looked up from `groups`.
+  const units = (field) => groups.flatMap((g) => d3.range(g[field]).map(() => g.key));
+
+  const svg = d3.create("svg")
+    .attr("viewBox", `0 0 ${total} ${side + titleH}`).attr("width", total).attr("height", side + titleH)
+    .attr("role", "img");
+  const label = () => `If the US were 100 people and its household wealth were 100 coins (${fmt.quarter(rowOf().date)}): ` +
+    groups.map((g) => `${shortName(g)}, ${plural(g.people, "person", "people")}, ${plural(g.coins, "coin", "coins")}`).join("; ") + ".";
+
+  const grid = (x0, title) => {
+    const g = svg.append("g").attr("transform", `translate(${x0},0)`);
+    g.append("text").attr("class", "picto-title").attr("y", 14).text(title);
+    return g.append("g").attr("transform", `translate(0,${titleH})`);
+  };
+  const fillOf = (key) => GROUPS.find((g) => g.key === key).fill;
+  const people = grid(0, "100 people").selectAll("g").data(units("people")).join("g")
+    .attr("class", "unit person-unit").attr("transform", (d, i) => at(i));
+  people.append("path").attr("d", PERSON).style("fill", fillOf);
+  const coins = grid(side + gap, "100 coins of wealth").selectAll("g").data(units("coins")).join("g")
+    .attr("class", "unit coin-unit").attr("transform", (d, i) => at(i));
+  coins.append("circle").attr("class", "coin-face").attr("cx", 5).attr("cy", 5).attr("r", 4.2).style("fill", fillOf);
+  coins.append("circle").attr("class", "coin-ring").attr("cx", 5).attr("cy", 5).attr("r", 2.8).attr("fill", "none");
+
+  // Highlighting: hovering a unit or key button previews a group; clicking
+  // pins it until clicked again. The area chart above follows along.
+  const all = svg.selectAll(".unit");
+  const show = (key) => {
+    all.classed("dim", (k) => key != null && k !== key);
+    highlightBands(key);
+    stat(key);
+  };
+  const tipRows = (g) => [
+    { value: `${g.people} of 100`, label: "people" },
+    { value: fmt.pct1(g.share), label: `of household wealth (${plural(g.coins, "coin", "coins")})` },
+  ];
+  all.on("pointerenter", (event, k) => { show(k); const g = byKey().get(k); showTip(g.label, tipRows(g), event.clientX, event.clientY); })
+    .on("pointermove", (event) => moveTip(event.clientX, event.clientY))
+    .on("pointerleave", () => { show(pinned); hideTip(); })
+    .on("click", (event, k) => pin(pinned === k ? null : k));
+
+  // Coins per person: the one line that turns the grids into a ratio. Uses
+  // the exact shares, not the rounded coins.
+  const perPerson = (g) => g.share / g.people; // coins (percent of wealth) per percent of people
+  const statEl = document.createElement("p");
+  statEl.className = "picto-stat";
+  statEl.setAttribute("aria-live", "polite");
+  const num = (v) => (v >= 10 ? d3.format(".0f")(v) : v >= 1 ? d3.format(".1f")(v) : d3.format(".2f")(v));
+  function stat(key) {
+    const m = byKey();
+    const top = m.get("top1"), bottom = m.get("bottom50");
+    const strong = (t) => { const b = document.createElement("strong"); b.textContent = t; return b; };
+    if (key == null) {
+      statEl.replaceChildren("Per person, the top 1% hold ", strong(`about ${d3.format(",")(+d3.format(".2r")(perPerson(top) / perPerson(bottom)))}×`),
+        " as much wealth as the bottom 50%.");
+      return;
+    }
+    const g = m.get(key);
+    const each = g.people === 1 ? "" : `: ${num(perPerson(g))} each`;
+    statEl.replaceChildren(strong(shortName(g)), `: ${plural(g.coins, "coin", "coins")} ${g.people === 1 ? "for 1 person" : `shared by ${g.people} people`}${each}.`);
+  }
+
+  // Then / now switch: re-split the coins and let the ones that change
+  // group animate over, one after another in reading order.
+  const when = document.createElement("p");
+  when.className = "picto-when";
+  const setWhen = () => { when.textContent = `Shares of total household net worth, ${fmt.quarter(rowOf().date)}`; };
+  const switchBox = document.createElement("div");
+  switchBox.className = "picto-switch";
+  segmented(switchBox, "Quarter", [
+    { key: "first", label: fmt.quarter(firstRow.date) },
+    { key: "last", label: fmt.quarter(lastRow.date) },
+  ], view, (key) => {
+    view = key;
+    groups = groupsFor(rowOf());
+    const next = units("coins");
+    const t = reduceMotion() ? 0 : 450;
+    coins.data(next).select(".coin-face")
+      .transition().duration(t).delay((d, i) => (t ? i * 6 : 0))
+      .style("fill", fillOf);
+    buttons.forEach(([k, b]) => { b.querySelector(".counts").textContent = countsText(byKey().get(k)); });
+    svg.attr("aria-label", label());
+    setWhen();
+    show(pinned);
+  });
+
+  // The key, as toggle buttons that state their counts.
+  const countsText = (g) => `${plural(g.people, "person", "people")} · ${plural(g.coins, "coin", "coins")}`;
+  const list = document.createElement("div");
+  list.className = "picto-key";
+  list.setAttribute("role", "group");
+  list.setAttribute("aria-label", "Highlight a group");
+  const buttons = groups.map((g) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "picto-button";
+    const sw = document.createElement("span");
+    sw.className = "legend-swatch";
+    sw.style.background = g.fill;
+    const counts = document.createElement("span");
+    counts.className = "counts";
+    counts.textContent = countsText(g);
+    b.append(sw, Object.assign(document.createElement("strong"), { textContent: shortName(g) }), counts);
+    b.addEventListener("click", () => pin(pinned === g.key ? null : g.key));
+    b.addEventListener("pointerenter", () => show(g.key));
+    b.addEventListener("pointerleave", () => show(pinned));
+    b.addEventListener("focus", () => show(g.key));
+    b.addEventListener("blur", () => show(pinned));
+    list.append(b);
+    return [g.key, b];
+  });
+  function pin(key) {
+    pinned = key;
+    buttons.forEach(([k, b]) => b.setAttribute("aria-pressed", k === key));
+    show(key);
+  }
+
+  const heading = document.createElement("p");
+  heading.className = "picto-heading";
+  heading.textContent = "If the US were 100 people, and its household wealth were 100 coins";
+  setWhen();
+  svg.attr("aria-label", label());
+  // The stat line goes below the buttons: its text changes on hover, and
+  // anything above the buttons that changes height would move them out from
+  // under the pointer.
+  el.replaceChildren(heading, when, switchBox, svg.node(), list, statEl);
+  pin(pinned);
+
+  // First time the graphic scrolls into view: people appear, then the coins
+  // drop in group by group, top 1% first. Skipped with reduced motion.
+  if (!introDone && !reduceMotion()) {
+    all.style("opacity", 0);
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      introDone = true;
+      people.transition().duration(250).delay((d, i) => i * 5).style("opacity", null);
+      coins.attr("transform", (d, i) => `${at(i)} translate(0,-6)`)
+        .transition().duration(300).delay((d, i) => 600 + i * 9).ease(d3.easeBackOut)
+        .style("opacity", null).attr("transform", (d, i) => at(i));
+    }, { threshold: 0.4 });
+    io.observe(el);
+  } else {
+    introDone = true;
+  }
 }

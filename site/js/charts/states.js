@@ -3,7 +3,7 @@
 // d3.geoAlbersUsa (Alaska and Hawaii inset), a threshold scale with fixed
 // benchmark breaks, the housing map's warm ramp, a pointer tooltip, and
 // arrow-key navigation with one tab stop for the whole map.
-import { load, asset, fmt, scaffold, fillTable, segmented, onWidth, showTip, moveTip, hideTip } from "./common.js";
+import { load, asset, fmt, scaffold, fillTable, segmented, thresholdLegend, onWidth, showTip, moveTip, hideTip } from "./common.js";
 
 // The housing map's warm sequential ramp (layers.js, 5 classes), checked
 // there for even lightness steps and colorblind separation. Same colors in
@@ -62,7 +62,7 @@ export async function render(figure) {
     const us = data.us[metric];
     const color = d3.scaleThreshold().domain(meta.breaks).range(WARM5);
 
-    drawLegend(legend, meta, color);
+    thresholdLegend(legend, meta.title, color.range(), meta.breaks, meta.tick);
 
     const height = Math.round(width * 0.62);
     const projection = d3.geoAlbersUsa().fitSize([width, height], { type: "FeatureCollection", features: states });
@@ -117,27 +117,4 @@ export async function render(figure) {
     plot.replaceChildren(svg.node());
   }
   onWidth(plot, draw);
-}
-
-// Legend: one swatch per class with the break values between them.
-function drawLegend(el, meta, color) {
-  const title = document.createElement("p");
-  title.className = "legend-title";
-  title.textContent = meta.title;
-  const row = document.createElement("div");
-  row.className = "legend-scale";
-  color.range().forEach((c, i) => {
-    const cell = document.createElement("span");
-    cell.className = "legend-cell";
-    const sw = document.createElement("span");
-    sw.className = "legend-swatch";
-    sw.style.background = c;
-    const t = document.createElement("span");
-    t.className = "legend-tick";
-    const b = meta.breaks;
-    t.textContent = i === 0 ? `< ${meta.tick(b[0])}` : i === b.length ? `${meta.tick(b[i - 1])}+` : `${meta.tick(b[i - 1])}–${meta.tick(b[i])}`;
-    cell.append(sw, t);
-    row.append(cell);
-  });
-  el.replaceChildren(title, row);
 }
