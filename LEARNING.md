@@ -60,6 +60,14 @@ concrete; newest phase at the bottom of each list.
 - **Browser cache / cache busting.** Browsers keep copies of files they've downloaded and may reuse them instead of asking again. If the page's scripts are new but its cached `styles.css` is old, charts draw without their styles (SVG shapes default to black fill). Cache busting gives each build's files a new URL (`styles.css?v=43ee5b1bb3`), so a changed file can't be served from an old copy. `build_site.py` adds the version.
 - **Ordinal ramp.** Shades of one hue, light to dark, for categories that have an order (wealth groups). A ramp says "more", which unrelated hues can't.
 
+### Phase 3
+
+- **Small multiples.** Several small charts side by side with the same axes, instead of one chart with two y-axes. Chart 3c's two panels share a time axis; each has its own y-scale, which is honest because they're separate charts.
+- **Dual-axis chart.** One plot with two different y-scales (left and right). Avoided: how the two scales line up is arbitrary, so the chart can suggest a relationship that isn't in the data.
+- **Projection vs. forecast.** CBO's baseline is a *projection*: what happens if current law stays as written. It's not a prediction of what Congress will do. The dashed line and the shaded "Projection" span mark it.
+- **Nominal vs. % of GDP.** Nominal dollars are the face value each year (not adjusted for inflation). % of GDP divides by the size of the economy, so 1945 and 2025 are comparable. Chart 3b offers both because they tell different parts of the story.
+- **Reusable component.** One piece of code used in several places with different settings. `site/js/charts/timeline.js` draws Charts 3a, 3b and 3c from an options object (series, axis, annotations, end labels).
+
 ## Decision log
 
 ### Phase 0
@@ -125,6 +133,20 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 2.8 | Every chart gets a closed "Show the data" table, an `aria-label` summary built from the data, and keyboard reading (arrow keys on line/area charts, arrow keys between states on the map) | Tooltips only | The spec asks for text summaries and keyboard access; a table is the full equivalent for anyone who can't use the chart, and tooltips never hide a value that isn't elsewhere. |
 | 2.9 | Chart 2b (asset composition) not built | Build it from the DFA CSV | First on the spec's cut list, and it needs a new fetcher (the DFA CSV isn't on FRED). Kept in "Next". |
 | 2.10 | The build adds a content fingerprint (`?v=…`) to the stylesheet, scripts, module imports and data requests; key SVG attributes (`fill="none"` on lines, transparent hit areas) are set in JavaScript as well as CSS | Tell readers to hard-refresh; a no-cache dev server | A cached old `styles.css` with new scripts drew Chart 1a as black streaks and Chart 1b as black blocks (Jack saw this; the map was fine because its colors are set in the script). Versioned URLs fix it for everyone, including GitHub Pages' 10-minute cache, and the attributes mean a missing stylesheet gives plain black-and-white charts, not black shapes. |
+| 2.11 | Charts 1a and 1b get a "Since 2000 / Since 1985" switch; 2000 stays the default and the base for the prose's facts (1985 facts get their own keys, e.g. `cpi_pct_since_1985`). The two switches are synced | One base year; 1985 as the default; a switch on 1a only | 2000 was the spec's choice, not a data constraint. A second base year is a robustness check: if core costs outrun wages from both starts, the point doesn't depend on a chosen year. (Picking a start year for drama would be cherry-picking.) Synced switches keep the two charts on the same span. 1985 is as far back as all six 1a lines go cleanly (rent from 1981, wages from 1979). |
+| 2.12 | In the 1985 view, Chart 1b keeps the categories BLS didn't track yet as gray rows at the bottom, under a "No data back to 1985" divider, with the month each series starts; the table shows "—" | Drop them from the 1985 view; keep them in sorted order with empty bars | Dropping them would silently change what's being compared between views. Grouping them at the bottom keeps the 1985 ranking clean. The pipeline decides which items are missing (no full base year), so nothing is hard-coded. |
+| 2.13 | Wages stay as the median; removing the top 10% wasn't added as a filter | A "median excluding the top 10%" line | A median barely moves when the top 10% is removed: it becomes the 45th percentile of all workers. BLS's percentile series (FRED, from 2000) bracket it: 25th percentile +115% since 2000, median +109% (annual averages, 2000 to 2025). That's a few points, not a different story. The top 10% matters for an *average*, not a median. |
+
+### Phase 3
+
+| # | Decision | Alternatives | Why |
+|---|---|---|---|
+| 3.1 | One shared line-chart module (`timeline.js`) for Charts 3a–3c; Chart 1a keeps its own code | Copy Chart 1a three times; move 1a onto the shared module too | The three Section 3 charts are plain time series, so one module keeps them consistent. Moving 1a over (chips, two base years) would mean reworking a chart that already works; it can move later. |
+| 3.2 | Chart 3a: history and projection are the same blue, projection dashed in a shaded "Projection" span; WWII, 2008 and COVID-19 annotated at FY1946, FY2009 and FY2020; the 2036 endpoint labeled | Different colors for history and projection | It's one measure, so one color; the dash and shading say "not actual". The 2008 note sits on FY2009 because the jump shows up in that fiscal year (October 2008 to September 2009). Annotation years are positions; every number shown comes from the data. |
+| 3.3 | Chart 3b defaults to nominal dollars, with a switch to % of GDP | % of GDP only; inflation-adjusted dollars | Dollars show the headline (interest passed defense in FY2024). % of GDP is the honest counterpoint: relative to the economy, interest is about where it was in the early 1990s, and defense was over a third of GDP in WWII. Inflation adjustment would need a separate price index; % of GDP already removes inflation and growth. |
+| 3.4 | Chart 3c as two small panels (foreign share; 10-year yield) on one time axis | One chart with two y-axes (the spec's "plus the 10-year yield as context") | Different units; a dual axis invents a correlation. Panels side by side on desktop, stacked on phones. |
+| 3.5 | End-label connectors drawn in muted gray, with a short colored key beside each label (also in Chart 1a) | Connectors in the series color | Reviewing Chart 3b, a colored connector bending down to a spread-apart label looked like the line itself dropping. Gray connectors can't be mistaken for data. |
+| 3.6 | "Can the US default?" drafted as `content/sections/debt_default.md` in an aside, no numbers or named events | Write it in Phase 5 with the rest of the prose | It's a Phase 3 deliverable in the spec. Kept conceptual (borrowing in your own currency, debt ceiling, interest costs, inflation, demand for Treasuries) and neutral; Jack reviews the wording in Phase 5. |
 
 ## Next (ideas, out of scope for v1)
 
@@ -133,4 +155,5 @@ Series ID changes from the spec's candidate table (spec rule 5):
 - Scrollytelling (charts that change as you scroll).
 - County-level data and state drill-downs.
 - A light/dark toggle button.
+- Chart 2a clarity (Jack's idea, Phase 5 polish): a "100 people" pictogram beside the wealth chart, with figures split 1 / 9 / 40 / 50 by group, ideally paired with 100 coins split by wealth share (now 32 / 36 / 29 / 2) for the latest quarter.
 - Chart 2b: asset composition by wealth group (equities vs. real estate), from the Fed's DFA CSV.

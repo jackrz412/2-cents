@@ -54,14 +54,14 @@
       <figure class="chart" id="chart-1a">
         <figcaption>
           <h3 class="chart-title">Core costs have outrun overall prices and wages</h3>
-          <p class="chart-sub">Index, 2000 average = 100, seasonally adjusted. Tap a category to hide or show it.</p>
+          <p class="chart-sub">Index, base-year average = 100, seasonally adjusted. Tap a category to hide or show it.</p>
         </figcaption>
         <p class="chart-source">Source: U.S. Bureau of Labor Statistics, Consumer Price Index (CPI-U) and median usual weekly earnings (via FRED).</p>
       </figure>
       <figure class="chart" id="chart-1b">
         <figcaption>
           <h3 class="chart-title">What got pricier, and what got cheaper</h3>
-          <p class="chart-sub">Change in price since 2000, by CPI category ({{fact:prices_period}} against the 2000 average)</p>
+          <p class="chart-sub">Change in price by CPI category: the average of {{fact:prices_period}} against the base-year average</p>
         </figcaption>
         <p class="chart-source">Source: U.S. Bureau of Labor Statistics, CPI-U, not seasonally adjusted. Wages: median usual weekly earnings, {{fact:wages_period}}.</p>
       </figure>
@@ -89,9 +89,31 @@
     <section id="debt" data-nav-label="Debt">
       <h2>The debt and the dollar</h2>
       {{section:debt}}
-      <figure class="chart-slot" id="chart-3a"><figcaption>Chart 3a: federal debt held by the public, % of GDP</figcaption></figure>
-      <figure class="chart-slot" id="chart-3b"><figcaption>Chart 3b: net interest and defense spending</figcaption></figure>
-      <figure class="chart-slot" id="chart-3c"><figcaption>Chart 3c: foreign holdings of Treasury debt</figcaption></figure>
+      <figure class="chart" id="chart-3a">
+        <figcaption>
+          <h3 class="chart-title">Federal debt held by the public, relative to the economy</h3>
+          <p class="chart-sub">% of GDP by fiscal year. Actual through FY{{fact:omb_latest_year}}; dashed line is CBO's baseline projection ({{fact:cbo_vintage}}), which assumes current law stays as it is.</p>
+        </figcaption>
+        <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 7.1; Congressional Budget Office, The Budget and Economic Outlook ({{fact:cbo_vintage}}).</p>
+      </figure>
+      <figure class="chart" id="chart-3b">
+        <figcaption>
+          <h3 class="chart-title">Interest on the debt and national defense</h3>
+          <p class="chart-sub">Federal outlays by fiscal year, actual through FY{{fact:omb_latest_year}}. Switch between dollars (not adjusted for inflation) and % of GDP.</p>
+        </figcaption>
+        <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 3.1 (functions 050 and 900).</p>
+      </figure>
+      <figure class="chart chart--small" id="chart-3c">
+        <figcaption>
+          <h3 class="chart-title">Who holds the debt, and what it costs to borrow</h3>
+          <p class="chart-sub">Two panels on the same time axis: the foreign share of federal debt held by the public (quarterly), and the 10-year Treasury yield (monthly average)</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBFIN, FYGFDPUN); Federal Reserve Board via FRED (GS10).</p>
+      </figure>
+      <aside class="callout" aria-labelledby="default-title">
+        <h3 id="default-title">Can the US default?</h3>
+        {{section:debt_default}}
+      </aside>
     </section>
 
     <section id="richest" data-nav-label="Richest">

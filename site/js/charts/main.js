@@ -5,8 +5,12 @@ import * as prices from "./prices.js";
 import * as changes from "./changes.js";
 import * as states from "./states.js";
 import * as wealth from "./wealth.js";
+import * as debt from "./debt.js";
+import * as spending from "./spending.js";
+import * as foreign from "./foreign.js";
 
-const CHARTS = { "chart-1a": prices, "chart-1b": changes, "map-1": states, "chart-2a": wealth };
+const CHARTS = { "chart-1a": prices, "chart-1b": changes, "map-1": states, "chart-2a": wealth,
+  "chart-3a": debt, "chart-3b": spending, "chart-3c": foreign };
 
 for (const [id, chart] of Object.entries(CHARTS)) {
   const figure = document.getElementById(id);

@@ -195,19 +195,33 @@ export function segmented(container, label, options, current, onChange) {
   group.className = "segmented";
   group.setAttribute("role", "group");
   group.setAttribute("aria-label", label);
+  // Marks an option as selected without calling onChange (for syncing).
+  const select = (key) => buttons.forEach((x, i) => x.setAttribute("aria-pressed", options[i].key === key));
   const buttons = options.map((o) => {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = o.label;
     b.setAttribute("aria-pressed", o.key === current);
     b.addEventListener("click", () => {
-      buttons.forEach((x, i) => x.setAttribute("aria-pressed", options[i].key === o.key));
+      select(o.key);
       onChange(o.key);
     });
     return b;
   });
   group.append(...buttons);
   container.append(group);
+  return select;
+}
+
+// "Since 2000 | Since 1985", on both Chart 1a and 1b. The two switches stay
+// in sync: flipping one redraws both charts, so they always agree.
+const baseYearCharts = [];
+export function baseYearSwitch(container, years, onChange) {
+  if (years.length < 2) return; // nothing to switch between
+  const select = segmented(container, "Base year",
+    years.map((y) => ({ key: y, label: `Since ${y}` })), years[0],
+    (year) => baseYearCharts.forEach((chart) => chart(year)));
+  baseYearCharts.push((year) => { select(year); onChange(year); });
 }
 
 // Redraw when the plot box changes width (phone rotation, window resize).

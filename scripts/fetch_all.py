@@ -15,7 +15,11 @@ import statistics
 from fetchers import bls, cbo, census_acs, fred, oecd, omb, worldbank
 from fetchers.common import ROOT, read_env, source, write_json
 
-BASE_YEAR = 2000
+# Charts 1a and 1b have two views, indexed to each base year (LEARNING.md
+# decision 2.11). The first is the default view and the one the prose's
+# facts use; facts for the others get their own keys (cpi_pct_since_1985).
+BASE_YEARS = (2000, 1985)
+FIRST_YEAR = min(BASE_YEARS)
 
 # Chart 1a lines: seasonally adjusted (SA) CPI, so monthly lines aren't jagged.
 CPI_LINES = {
@@ -78,16 +82,19 @@ def quarter_name(date):  # "2026-07-01" -> "Q3 2026"
     return f"Q{(d.month - 1) // 3 + 1} {d.year}"
 
 
-def base_mean(obs):
-    vals = [v for d, v in obs if d.startswith(str(BASE_YEAR))]
-    return statistics.mean(vals)
+def in_year(obs, year):
+    return [v for d, v in obs if d.startswith(str(year))]
 
 
-def pct_since_base(obs, n_latest):
+def base_mean(obs, year):
+    return statistics.mean(in_year(obs, year))
+
+
+def pct_since_base(obs, year, n_latest):
     """% change from the base-year average to the average of the last n_latest
     observations (12 months, or 4 quarters)."""
     latest = statistics.mean(v for _, v in obs[-n_latest:])
-    return round((latest / base_mean(obs) - 1) * 100, 1)
+    return round((latest / base_mean(obs, year) - 1) * 100, 1)
 
 
 def main():
@@ -105,42 +112,68 @@ def main():
 
     # --- Section 1: prices and wages ------------------------------------------
     cpi_ids = sorted({sid for sid, _ in CPI_LINES.values()} | {sid for sid, _ in CPI_BARS.values()})
-    cpi = bls.fetch(cpi_ids, start_year=BASE_YEAR)
-    wages = fred.fetch([WAGES], key, start=f"{BASE_YEAR}-01-01")[WAGES]["obs"]
-
-    for k, (sid, _) in {**CPI_LINES, **CPI_BARS}.items():
-        months_in_base = sum(1 for d, _ in cpi[sid] if d.startswith(str(BASE_YEAR)))
-        if months_in_base != 12:
-            raise SystemExit(f"{sid} has {months_in_base} months in {BASE_YEAR}; the index needs all 12")
+    cpi = bls.fetch(cpi_ids, start_year=FIRST_YEAR)
+    wages = fred.fetch([WAGES], key, start=f"{FIRST_YEAR}-01-01")[WAGES]["obs"]
     last_month = cpi["CUUR0000SA0"][-1][0]
 
-    lines = []
-    for k, (sid, label) in CPI_LINES.items():
-        b = base_mean(cpi[sid])
-        lines.append({"key": k, "label": label, "series": sid, "freq": "monthly",
-                      "points": [[d, round(v / b * 100, 1)] for d, v in cpi[sid]]})
-    b = base_mean(wages)
-    lines.append({"key": "wages", "label": "Median weekly earnings", "series": WAGES, "freq": "quarterly",
-                  "points": [[d, round(v / b * 100, 1)] for d, v in wages]})
-    write_json("prices_index", {"base_year": BASE_YEAR, "lines": lines})
-    summarize("prices_index", sum(len(l["points"]) for l in lines), cpi["CUSR0000SA0"][0][0], last_month)
+    # A series can be indexed to a base year only if it has the whole year
+    # (12 months, or 4 quarters for wages).
+    def has_base(obs, year, n):
+        return len(in_year(obs, year)) == n
 
-    bars = [{"key": k, "label": label, "series": sid, "pct": pct_since_base(cpi[sid], 12)}
-            for k, (sid, label) in CPI_BARS.items()]
-    bars.sort(key=lambda r: -r["pct"])
-    wages_pct = pct_since_base(wages, 4)
+    # Chart 1a: every line must exist in every base year.
+    for year in BASE_YEARS:
+        for sid, _ in CPI_LINES.values():
+            if not has_base(cpi[sid], year, 12):
+                raise SystemExit(f"{sid} has {len(in_year(cpi[sid], year))} months in {year}; the index needs all 12")
+        if not has_base(wages, year, 4):
+            raise SystemExit(f"{WAGES} lacks 4 quarters in {year}")
+    # Chart 1b: every bar must exist in the default base year; in earlier
+    # base years a bar without data is kept as a "no data" row.
+    for sid, _ in CPI_BARS.values():
+        if not has_base(cpi[sid], BASE_YEARS[0], 12):
+            raise SystemExit(f"{sid} lacks 12 months in {BASE_YEARS[0]}")
+
+    def indexed(obs, year):
+        b = base_mean(obs, year)
+        return [[d, round(v / b * 100, 1)] for d, v in obs if d >= f"{year}-01-01"]
+
+    index_views, change_views = [], []
+    for year in BASE_YEARS:
+        lines = [{"key": k, "label": label, "series": sid, "freq": "monthly", "points": indexed(cpi[sid], year)}
+                 for k, (sid, label) in CPI_LINES.items()]
+        lines.append({"key": "wages", "label": "Median weekly earnings", "series": WAGES, "freq": "quarterly",
+                      "points": indexed(wages, year)})
+        index_views.append({"base_year": year, "lines": lines})
+
+        bars, missing = [], []
+        for k, (sid, label) in CPI_BARS.items():
+            if has_base(cpi[sid], year, 12):
+                bars.append({"key": k, "label": label, "series": sid, "pct": pct_since_base(cpi[sid], year, 12)})
+            else:
+                # The month BLS's series starts, shown as "Data from Dec 1997".
+                missing.append({"key": k, "label": label, "series": sid, "first": cpi[sid][0][0]})
+        bars.sort(key=lambda r: -r["pct"])
+        missing.sort(key=lambda r: (r["first"], r["label"]))
+        change_views.append({"base_year": year, "items": bars, "missing": missing,
+                             "wages": {"pct": pct_since_base(wages, year, 4)}})
+        suffix = f"_pct_since_{year}"
+        for r in bars:
+            facts[f"{r['key']}{suffix}"] = round(r["pct"])
+        facts[f"wages{suffix}"] = round(pct_since_base(wages, year, 4))
+
+    write_json("prices_index", {"views": index_views})
+    summarize("prices_index", sum(len(l["points"]) for v in index_views for l in v["lines"]),
+              f"{FIRST_YEAR}-01-01", last_month)
     write_json("price_changes", {
-        "base_year": BASE_YEAR,
         "period": f"12 months to {month_name(last_month)}",
-        "items": bars,
-        "wages": {"pct": wages_pct, "period": f"4 quarters to {quarter_name(wages[-1][0])}"},
+        "wages_period": f"4 quarters to {quarter_name(wages[-1][0])}",
+        "views": change_views,
     })
-    summarize("price_changes", len(bars), BASE_YEAR, month_name(last_month))
+    summarize("price_changes", sum(len(v["items"]) for v in change_views),
+              "/".join(map(str, BASE_YEARS)), month_name(last_month))
 
     facts["prices_period"] = f"the 12 months to {month_name(last_month)}"
-    for r in bars:
-        facts[f"{r['key']}_pct_since_2000"] = round(r["pct"])
-    facts["wages_pct_since_2000"] = round(wages_pct)
     facts["wages_period"] = quarter_name(wages[-1][0])
 
     sources.append(source(
@@ -148,7 +181,8 @@ def main():
         "U.S. Bureau of Labor Statistics", "https://www.bls.gov/cpi/", month_name(last_month),
         series=sorted(cpi_ids),
         notes="Lines (Chart 1a) use seasonally adjusted series (CUSR...); bars (Chart 1b) use "
-              "not seasonally adjusted series (CUUR...), latest 12 months vs. the 2000 average."))
+              "not seasonally adjusted series (CUUR...), latest 12 months vs. the base-year average "
+              "(2000, or 1985 in the longer view)."))
     sources.append(source(
         "fred_wages", "Median usual weekly nominal earnings, full-time wage and salary workers, 16+",
         "U.S. Bureau of Labor Statistics, via FRED", fred.page(WAGES), quarter_name(wages[-1][0]),

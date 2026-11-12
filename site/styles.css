@@ -316,7 +316,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 /* Tooltip (one per page, positioned by common.js). */
 .tooltip {
   position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none;
-  max-width: 280px; padding: var(--space-2) 12px; border-radius: var(--radius);
+  max-width: 320px; padding: var(--space-2) 12px; border-radius: var(--radius);
   background: var(--color-bg); color: var(--color-text);
   border: 1px solid var(--color-border); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   font-size: var(--text-sm); line-height: 1.4; opacity: 0; transition: opacity 0.1s;
@@ -324,7 +324,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .tooltip.on { opacity: 1; }
 .tip-heading { margin-bottom: 4px; color: var(--color-muted); }
 .tip-row { display: flex; align-items: baseline; gap: var(--space-2); }
-.tip-row strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip-row strong { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tip-row span:last-child { color: var(--color-muted); }
 .tip-key { flex: none; align-self: center; width: 12px; height: 2px; border-radius: 1px; }
 
@@ -338,6 +338,37 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .chart-table tbody th { font-weight: 400; }
 .chart-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* Chart 1a end labels: ink text, colored leader lines carry identity. */
-.chart .end-labels path { stroke-width: 1.5; }
+/* End labels: ink text, a colored key carries identity, a gray connector ties it to the line end. */
+.chart .end-labels .leader { stroke: var(--grid-base); stroke-width: 1; }
+.chart .end-labels .key { stroke-width: 2; stroke-linecap: round; }
 .chart .end-labels text { fill: var(--color-text); }
+
+/* Chart 1b "no data" rows (base years before a series starts). */
+.chart .no-data .label, .chart .no-data .value { fill: var(--color-muted); }
+.chart .no-data .value { font-style: italic; }
+.chart .no-data-divider line { stroke: var(--grid-base); stroke-width: 1; shape-rendering: crispEdges; }
+.chart .no-data-divider text { fill: var(--color-muted); font-weight: 600; }
+
+/* Section 3 */
+.chart .lines path.dashed { stroke-dasharray: 5 4; }
+.chart .shade rect { fill: var(--color-surface); }
+.chart .shade text { fill: var(--color-muted); }
+.chart .notes circle { stroke: var(--color-bg); stroke-width: 2; }
+.chart .notes text { fill: var(--color-text); }
+/* Chart 3c: two panels side by side on wide screens, stacked on phones. */
+.small-multiples { display: grid; gap: var(--space-4); }
+@media (min-width: 640px) { .small-multiples { grid-template-columns: 1fr 1fr; } }
+.panel { min-width: 0; }
+.panel-title { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 600; }
+.panel-plot { position: relative; }
+
+/* "Can the US default?" explainer */
+.callout {
+  margin: var(--space-6) 0; padding: var(--space-4);
+  background: var(--color-surface); border-left: 3px solid var(--color-coin); border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: var(--text-md);
+}
+.callout h3 { margin: 0 0 var(--space-2); font: 600 var(--text-base)/var(--leading-tight) var(--font-sans); }
+.callout p { margin: 0 0 var(--space-3); }
+.callout ul { margin: 0; padding-left: 1.2em; }
+.callout li + li { margin-top: var(--space-2); }

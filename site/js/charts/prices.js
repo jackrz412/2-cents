@@ -1,8 +1,9 @@
-// Chart 1a: prices and wages, indexed so the 2000 average = 100.
+// Chart 1a: prices and wages, indexed so the base-year average = 100, with
+// a switch between base years (2000 or 1985, shared with Chart 1b).
 // Lines: overall CPI (gray, the reference), four core costs (categorical
 // slots 1-4) and median weekly earnings (ink). Chips toggle lines; a
 // crosshair tooltip lists every visible line at the pointer's month.
-import { load, fmt, parseDate, scaffold, fillTable, chips, onWidth, showTip, moveTip, hideTip, screenPoint } from "./common.js";
+import { load, fmt, parseDate, scaffold, fillTable, chips, baseYearSwitch, onWidth, showTip, moveTip, hideTip, screenPoint } from "./common.js";
 
 // Display order and colors (CSS custom properties in styles.css).
 const STYLE = {
@@ -16,11 +17,6 @@ const STYLE = {
 
 export async function render(figure) {
   const data = await load("prices_index");
-  const lines = Object.keys(STYLE).map((key) => {
-    const l = data.lines.find((x) => x.key === key);
-    return { ...l, ...STYLE[key], points: l.points.map(([d, v]) => [parseDate(d), v]) };
-  });
-  const months = lines.find((l) => l.key === "cpi").points.map((p) => p[0]);
   const bisect = d3.bisector((p) => p[0]).right;
   // The value of a line at a date: the latest observation on or before it
   // (wages are quarterly, so they hold for the quarter's three months).
@@ -30,40 +26,56 @@ export async function render(figure) {
   };
 
   const { controls, plot, table } = scaffold(figure, { controls: true });
-  let visible = new Set(lines.map((l) => l.key));
-  chips(controls, lines, (on) => { visible = on; draw(); });
 
-  // Table view: one row per year (that year's last observation), every line.
-  const years = d3.groups(months, (d) => d.getUTCFullYear()).map(([, ds]) => ds[ds.length - 1]);
-  fillTable(table, [
-    { label: "Month", value: (d) => fmt.month(d) },
-    ...lines.map((l) => ({ label: l.label, num: true, value: (d) => fmt.index(valueAt(l, d)) })),
-  ], years, "Prices and wages, index 2000 = 100");
+  // Everything that depends on the base year; setView() swaps it.
+  let base, lines, months, last, summary;
+  function setView(year) {
+    const view = data.views.find((v) => v.base_year === year);
+    base = year;
+    lines = Object.keys(STYLE).map((key) => {
+      const l = view.lines.find((x) => x.key === key);
+      return { ...l, ...STYLE[key], points: l.points.map(([d, v]) => [parseDate(d), v]) };
+    });
+    months = lines.find((l) => l.key === "cpi").points.map((p) => p[0]);
+    last = months[months.length - 1];
+    summary = lines.map((l) => `${l.label} ${fmt.index(valueAt(l, last))}`).join(", ");
+    focusIndex = months.length - 1;
+    // Table view: one row per year (that year's last observation), every line.
+    const years = d3.groups(months, (d) => d.getUTCFullYear()).map(([, ds]) => ds[ds.length - 1]);
+    fillTable(table, [
+      { label: "Month", value: (d) => fmt.month(d) },
+      ...lines.map((l) => ({ label: l.label, num: true, value: (d) => fmt.index(valueAt(l, d)) })),
+    ], years, `Prices and wages, index ${year} = 100`);
+  }
 
-  const last = months[months.length - 1];
-  const summary = lines.map((l) => `${l.label} ${fmt.index(valueAt(l, last))}`).join(", ");
+  let visible = new Set(Object.keys(STYLE));
+  let focusIndex = 0;
+  setView(data.views[0].base_year);
+  baseYearSwitch(controls, data.views.map((v) => v.base_year), (year) => { setView(year); if (width) draw(); });
+  chips(controls, Object.keys(STYLE).map((key) => ({ key, ...STYLE[key] })), (on) => { visible = on; draw(); });
 
   let width = 0;
-  let focusIndex = months.length - 1;
   function draw(w = width) {
     width = w;
     const height = Math.max(260, Math.min(400, width * 0.6));
     // End labels need room on the right; on phones the chips and tooltip carry identity instead.
     const labelled = width >= 500;
-    const m = { top: 12, right: labelled ? 118 : 12, bottom: 28, left: 40 };
+    const m = { top: 12, right: labelled ? 132 : 12, bottom: 28, left: 40 };
     const shown = lines.filter((l) => visible.has(l.key));
 
     const x = d3.scaleUtc().domain(d3.extent(months)).range([m.left, width - m.right]);
     const max = d3.max(shown, (l) => d3.max(l.points, (p) => p[1]));
-    // Ticks every 50 from 100 (the base year), with a little room below it.
-    const top = Math.ceil(max / 50) * 50;
-    const y = d3.scaleLinear().domain([90, top]).range([height - m.bottom, m.top]);
-    const yTicks = d3.range(100, top + 1, 50);
+    // Ticks from 100 (the base year) in round steps, with a little room below it.
+    // The smallest step that gives at most six gridlines above 100.
+    const step = [50, 100, 200, 500].find((st) => (Math.ceil(max / st) * st - 100) / st <= 6) ?? 500;
+    const top = Math.ceil(max / step) * step;
+    const y = d3.scaleLinear().domain([100 - step / 5, top]).range([height - m.bottom, m.top]);
+    const yTicks = d3.range(100, top + 1, step);
 
     const svg = d3.create("svg")
       .attr("viewBox", `0 0 ${width} ${height}`).attr("width", width).attr("height", height)
       .attr("role", "img").attr("tabindex", 0)
-      .attr("aria-label", `Line chart, index 2000 = 100, ${fmt.month(months[0])} to ${fmt.month(last)}. Latest values: ${summary}. Use the left and right arrow keys to read values by month.`);
+      .attr("aria-label", `Line chart, index ${base} = 100, ${fmt.month(months[0])} to ${fmt.month(last)}. Latest values: ${summary}. Use the left and right arrow keys to read values by month.`);
 
     svg.append("g").attr("class", "grid")
       .selectAll("line").data(yTicks).join("line")
@@ -101,11 +113,16 @@ export async function render(figure) {
       for (let i = ends.length - 2; i >= 0; i--) ends[i].y = Math.min(ends[i].y, ends[i + 1].y - gap);
       const lx = width - m.right + 22;
       const g = svg.append("g").attr("class", "end-labels");
-      g.selectAll("path").data(ends).join("path")
-        .attr("fill", "none").style("stroke", (e) => e.l.color)
-        .attr("d", (e) => `M${e.ex + 4},${e.y0}C${e.ex + 12},${e.y0} ${lx - 12},${e.y} ${lx - 4},${e.y}`);
+      // Connector in muted gray (a colored one bending away reads as data),
+      // then a short key in the series color beside the label.
+      g.selectAll("path").data(ends).join("path").attr("class", "leader")
+        .attr("fill", "none")
+        .attr("d", (e) => `M${e.ex + 4},${e.y0}C${e.ex + 12},${e.y0} ${lx - 12},${e.y} ${lx - 2},${e.y}`);
+      g.selectAll("line").data(ends).join("line").attr("class", "key")
+        .attr("x1", lx).attr("x2", lx + 10).attr("y1", (e) => e.y).attr("y2", (e) => e.y)
+        .style("stroke", (e) => e.l.color);
       g.selectAll("text").data(ends).join("text")
-        .attr("x", lx).attr("y", (e) => e.y).attr("dy", "0.32em")
+        .attr("x", lx + 14).attr("y", (e) => e.y).attr("dy", "0.32em")
         .text((e) => `${e.l.short} ${fmt.index(e.v)}`);
     }
 
@@ -126,7 +143,7 @@ export async function render(figure) {
         .sort((a, b) => b.v - a.v)
         .map(({ l, v }) => ({ value: `${fmt.index(v)} (${fmt.pct(v - 100)})`, label: l.label, key: l.color }));
       if (clientX == null) [clientX, clientY] = screenPoint(svg.node(), cx, m.top);
-      showTip(fmt.month(d), rows, clientX, clientY);
+      showTip(`${fmt.month(d)} · change since ${base}`, rows, clientX, clientY);
     }
     const nearest = (event) => {
       const [px] = d3.pointer(event);
