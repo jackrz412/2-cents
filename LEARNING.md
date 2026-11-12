@@ -43,6 +43,23 @@ concrete; newest phase at the bottom of each list.
 - **Vendoring.** Keeping a pinned copy of a third-party file in your repo (`site/geo/states-10m.json`), with its source and checksum, instead of loading it from someone else's server at run time.
 - **Checksum (SHA-256).** A fingerprint of a file's exact bytes. If the recorded checksum still matches, the file hasn't changed.
 
+### Phase 2
+
+- **D3.** A JavaScript library for drawing charts from data: it turns numbers into positions (scales), builds SVG shapes (lines, areas, map paths), and attaches events. Loaded from jsDelivr at a pinned version (`d3@7.9.0`), as on the housing map.
+- **SVG.** The browser's vector drawing format: shapes described as text (`<path d="M10,20 L30,40">`), crisp at any size, and styleable with CSS. Every chart here is one `<svg>`.
+- **Scale.** A function from data to screen: `x(2010)` returns a pixel position. `scaleUtc` for dates, `scaleLinear` for numbers, `scaleBand` for bar rows, `scaleThreshold` for map color classes.
+- **Threshold scale / fixed breaks.** Colors chosen by which interval a value falls in (`< 3×`, `3–4×`, ...), with the break points set by hand rather than by the data's quantiles. Same rule as the housing map (its DECISIONS 011).
+- **Projection (`geoAlbersUsa`).** The math that flattens latitude/longitude onto a page. Albers USA is the standard US map projection, with Alaska and Hawaii moved into insets. `fitSize` scales it to the box.
+- **TopoJSON / `topojson.feature`.** A compact map format that stores shared borders once. `topojson.feature` turns it back into one shape per state; `topojson.mesh` draws only the internal borders, so each is drawn once.
+- **ES module (`type="module"`).** A JavaScript file that `import`s from others (`import { load } from "./common.js"`). Lets each chart be its own file without a bundler. Modules run after the page is parsed.
+- **Stacked area / `d3.stack`.** Areas piled on top of each other so each band's thickness is one group's share and the top edge is the total (here 100%).
+- **Crosshair tooltip.** A vertical line that snaps to the nearest date under the pointer, with a box listing every series at that date. You aim at a date, not at a 2px line.
+- **ResizeObserver.** A browser API that reports when an element changes size. Each chart redraws at its new width (phone rotation, window resize).
+- **Roving tabindex.** One element in a group is in the Tab order (`tabindex="0"`), the rest are `-1`; arrow keys move between them. The map is one Tab stop, not 51.
+- **Colorblind (CVD) check.** Simulating common color-vision deficiencies and measuring how far apart two colors still are (ΔE). The dataviz skill's validator script does the math; chart colors were picked from steps that pass.
+- **Browser cache / cache busting.** Browsers keep copies of files they've downloaded and may reuse them instead of asking again. If the page's scripts are new but its cached `styles.css` is old, charts draw without their styles (SVG shapes default to black fill). Cache busting gives each build's files a new URL (`styles.css?v=43ee5b1bb3`), so a changed file can't be served from an old copy. `build_site.py` adds the version.
+- **Ordinal ramp.** Shades of one hue, light to dark, for categories that have an order (wealth groups). A ramp says "more", which unrelated hues can't.
+
 ## Decision log
 
 ### Phase 0
@@ -94,6 +111,21 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 1.12 | Wealth shares checked to sum to ~100% each quarter; CPI series checked to have all 12 months of 2000; CBO's last actual year checked to be within 1 point of OMB's | No checks | Cheap guards that stop a bad refresh from writing quietly wrong files. The CBO check is what caught the FRED debt series mismatch (row above). |
 | 1.13 | Debt history and the interest/defense lines both from OMB Historical Tables, the projection from CBO | FRED for history | Same publisher and vintage for all of Section 3's budget history, and CBO and OMB agree on the year they share (99.4% vs. 99.5%). The cost is 1939, which Table 7.1 doesn't have. |
 
+### Phase 2
+
+| # | Decision | Alternatives | Why |
+|---|---|---|---|
+| 2.1 | One ES module per chart in `site/js/charts/`, plus `common.js` (data loading, tooltip, table, chips, resize) and `main.js` | One big script like the housing map's `map.js`; a bundler (Vite) | Four (later nine) charts share the same pieces; modules let each file stay short without adding npm or a build tool. A failed chart shows a note in its own figure and leaves the rest running. |
+| 2.2 | Chart titles, subtitles and source lines are in `index.html`; the scripts add the plot, controls and table | Build everything in JavaScript | The text is readable without JavaScript and by search engines, and the period labels come from `facts.json` through the build, like the prose. |
+| 2.3 | Chart colors from the dataviz reference palette, checked with its validator against this page's backgrounds (`#faf8f3` light, `#0d0d0d` dark); dark mode has its own steps | Housing-map colors; one set for both modes | The housing map only has map ramps, not line colors. All four line colors pass the colorblind and normal-vision checks in both modes. Light-mode aqua and yellow are under 3:1 contrast against the paper, so the chips (legend), tooltip and table carry every value too. |
+| 2.4 | Map breaks: price to income 3 / 4 / 5 / 6, rent burden 28 / 30 / 32 / 34%. The housing map's warm ramp, the same in both modes | Quantiles; a continuous scale | Fixed breaks keep a color's meaning when the data updates. 3, 4 and 5 are the usual "affordable / moderately / seriously / severely unaffordable" lines for price to income (Demographia's categories); 6 splits off the extreme states. 30% of income is HUD's cost-burden line, so it sits on a break. |
+| 2.5 | Chart 1a: overall CPI in gray (the reference), wages in the text color, the four core costs in colors 1–4; each line labeled at its end with its latest value (desktop), spread apart where lines end close together, with a short leader line back to the line | Six categorical colors; no end labels (chips and tooltip only) | The story is core costs vs. the two references, so those stand apart by being neutral. The first version had no end labels; on review the chart didn't explain itself at a glance, so they were added. On phones there's no room, so the chips (legend) and tooltip carry it. |
+| 2.6 | Chart 1b: rises orange, falls blue, overall CPI gray; wage growth as a vertical rule | One color for every bar | Up and down are opposite meanings, so they get opposite (warm/cool) hues. The wage rule answers "did this outrun my pay?" at a glance. On phones each category name moves above its bar. |
+| 2.7 | Chart 2a: top 1% on the baseline, one blue ramp (darkest = top 1%), labels inside the three wide bands | Bottom 50% on the baseline; four unrelated hues | The flat baseline makes the top 1%'s rise readable. The bottom 50%'s band (2–4%) is too thin for a label; the legend and tooltip carry it. |
+| 2.8 | Every chart gets a closed "Show the data" table, an `aria-label` summary built from the data, and keyboard reading (arrow keys on line/area charts, arrow keys between states on the map) | Tooltips only | The spec asks for text summaries and keyboard access; a table is the full equivalent for anyone who can't use the chart, and tooltips never hide a value that isn't elsewhere. |
+| 2.9 | Chart 2b (asset composition) not built | Build it from the DFA CSV | First on the spec's cut list, and it needs a new fetcher (the DFA CSV isn't on FRED). Kept in "Next". |
+| 2.10 | The build adds a content fingerprint (`?v=…`) to the stylesheet, scripts, module imports and data requests; key SVG attributes (`fill="none"` on lines, transparent hit areas) are set in JavaScript as well as CSS | Tell readers to hard-refresh; a no-cache dev server | A cached old `styles.css` with new scripts drew Chart 1a as black streaks and Chart 1b as black blocks (Jack saw this; the map was fine because its colors are set in the script). Versioned URLs fix it for everyone, including GitHub Pages' 10-minute cache, and the attributes mean a missing stylesheet gives plain black-and-white charts, not black shapes. |
+
 ## Next (ideas, out of scope for v1)
 
 - AI chat over the data.
@@ -101,3 +133,4 @@ Series ID changes from the spec's candidate table (spec rule 5):
 - Scrollytelling (charts that change as you scroll).
 - County-level data and state drill-downs.
 - A light/dark toggle button.
+- Chart 2b: asset composition by wealth group (equities vs. real estate), from the Fed's DFA CSV.

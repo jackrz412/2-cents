@@ -51,15 +51,39 @@
     <section id="affordability" data-nav-label="Affordability">
       <h2>The affordability gap</h2>
       {{section:affordability}}
-      <figure class="chart-slot" id="chart-1a"><figcaption>Chart 1a: prices and wages, indexed to 2000</figcaption></figure>
-      <figure class="chart-slot" id="chart-1b"><figcaption>Chart 1b: what got pricier and what got cheaper</figcaption></figure>
-      <figure class="chart-slot" id="map-1"><figcaption>Map 1: home price to income, by state</figcaption></figure>
+      <figure class="chart" id="chart-1a">
+        <figcaption>
+          <h3 class="chart-title">Core costs have outrun overall prices and wages</h3>
+          <p class="chart-sub">Index, 2000 average = 100, seasonally adjusted. Tap a category to hide or show it.</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Bureau of Labor Statistics, Consumer Price Index (CPI-U) and median usual weekly earnings (via FRED).</p>
+      </figure>
+      <figure class="chart" id="chart-1b">
+        <figcaption>
+          <h3 class="chart-title">What got pricier, and what got cheaper</h3>
+          <p class="chart-sub">Change in price since 2000, by CPI category ({{fact:prices_period}} against the 2000 average)</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Bureau of Labor Statistics, CPI-U, not seasonally adjusted. Wages: median usual weekly earnings, {{fact:wages_period}}.</p>
+      </figure>
+      <figure class="chart" id="map-1">
+        <figcaption>
+          <h3 class="chart-title">Where housing costs the most, relative to income</h3>
+          <p class="chart-sub">By state, American Community Survey {{fact:acs_vintage}} 5-year estimates</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Census Bureau, ACS tables B25077 (median home value), B19013 (median household income) and B25071 (rent as % of income).</p>
+      </figure>
     </section>
 
     <section id="wealth" data-nav-label="Wealth">
       <h2>Wealth concentration</h2>
       {{section:wealth}}
-      <figure class="chart-slot" id="chart-2a"><figcaption>Chart 2a: share of household net worth by group</figcaption></figure>
+      <figure class="chart" id="chart-2a">
+        <figcaption>
+          <h3 class="chart-title">Who owns the household wealth</h3>
+          <p class="chart-sub">Share of total household net worth by wealth group, {{fact:wealth_first_period}} to {{fact:wealth_period}}</p>
+        </figcaption>
+        <p class="chart-source">Source: Federal Reserve Board, Distributional Financial Accounts (via FRED).</p>
+      </figure>
     </section>
 
     <section id="debt" data-nav-label="Debt">
@@ -84,5 +108,9 @@
   </main>
 
   <script src="js/nav.js"></script>
+  <!-- Pinned versions, as on the housing map. -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script type="module" src="js/charts/main.js"></script>
 </body>
 </html>

@@ -5,12 +5,18 @@
 - Renders site/index.html, filling two kinds of placeholder:
     {{section:name}}  the Markdown in content/sections/name.md, as HTML
     {{fact:key}}      a value from data/facts.json (also works inside the Markdown)
+- Adds ?v=<version> to the stylesheet, scripts and module imports, where the
+  version is a fingerprint of the site and data files. A browser that cached
+  an older styles.css would otherwise pair it with newer scripts, and charts
+  drawn with missing styles turn into black shapes. A new version means a
+  new URL, so the browser has to fetch the new file.
 
 Used by the Pages workflow and for local preview, so both serve the same files.
 Run with the project's virtual environment, which has the markdown package:
 
     .venv/bin/python scripts/build_site.py
 """
+import hashlib
 import json
 import re
 import shutil
@@ -59,6 +65,29 @@ def render_section(name, facts):
     return markdown.markdown(fill_facts(path.read_text(), facts))
 
 
+def fingerprint():
+    """Short hash of every file the page uses: changes whenever any of them does."""
+    h = hashlib.sha256()
+    for root in (SITE, DATA, SECTIONS):
+        for p in sorted(root.rglob("*")):
+            if p.is_file():
+                h.update(str(p.relative_to(ROOT)).encode())
+                h.update(p.read_bytes())
+    return h.hexdigest()[:10]
+
+
+# Local stylesheet and script references in index.html, and relative module
+# imports ("./common.js") in the chart scripts.
+LOCAL_ASSET = re.compile(r'((?:href|src)="(?:styles\.css|js/[\w/.-]+\.js))"')
+MODULE_IMPORT = re.compile(r'(from "\./[\w.-]+\.js)"')
+
+
+def add_versions(version):
+    for js in (OUT / "js").rglob("*.js"):
+        js.write_text(MODULE_IMPORT.sub(rf'\1?v={version}"', js.read_text()))
+    return lambda page: LOCAL_ASSET.sub(rf'\1?v={version}"', page)
+
+
 def main():
     facts = load_facts()
 
@@ -77,10 +106,12 @@ def main():
         page,
     )
     page = fill_facts(page, facts)
+    version = fingerprint()
+    page = add_versions(version)(page)
     (OUT / "index.html").write_text(page)
 
     n = sum(1 for p in OUT.rglob("*") if p.is_file())
-    print(f"built _site/ ({n} files)")
+    print(f"built _site/ ({n} files, version {version})")
 
 
 if __name__ == "__main__":
