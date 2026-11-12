@@ -12,6 +12,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 cp .env.example .env                       # then add your FRED key
 
+.venv/bin/python scripts/fetch_all.py      # refresh data/*.json (add --fresh to re-download raw files)
 .venv/bin/python scripts/build_site.py     # site/ + data/ + content/ -> _site/
 python3 -m http.server -d _site 8001       # preview at http://localhost:8001
 ```

@@ -1,0 +1,166 @@
+[
+  {
+    "as_of": "October 2026",
+    "dataset": "Consumer Price Index for All Urban Consumers (CPI-U), U.S. city average",
+    "id": "bls_cpi",
+    "notes": "Lines (Chart 1a) use seasonally adjusted series (CUSR...); bars (Chart 1b) use not seasonally adjusted series (CUUR...), latest 12 months vs. the 2000 average.",
+    "publisher": "U.S. Bureau of Labor Statistics",
+    "retrieved": "2026-11-12",
+    "series": [
+      "CUSR0000SA0",
+      "CUSR0000SAH1",
+      "CUSR0000SAM",
+      "CUSR0000SEEB01",
+      "CUSR0000SEHA",
+      "CUUR0000SA0",
+      "CUUR0000SA0E",
+      "CUUR0000SAA",
+      "CUUR0000SAF1",
+      "CUUR0000SAH1",
+      "CUUR0000SAM",
+      "CUUR0000SEEB01",
+      "CUUR0000SEEB03",
+      "CUUR0000SEEE01",
+      "CUUR0000SEEE02",
+      "CUUR0000SEEE04",
+      "CUUR0000SEHA",
+      "CUUR0000SEMD",
+      "CUUR0000SERA01",
+      "CUUR0000SERE01",
+      "CUUR0000SETA01"
+    ],
+    "url": "https://www.bls.gov/cpi/"
+  },
+  {
+    "as_of": "Q3 2026",
+    "dataset": "Median usual weekly nominal earnings, full-time wage and salary workers, 16+",
+    "id": "fred_wages",
+    "publisher": "U.S. Bureau of Labor Statistics, via FRED",
+    "retrieved": "2026-11-12",
+    "series": [
+      "LES1252881500Q"
+    ],
+    "url": "https://fred.stlouisfed.org/series/LES1252881500Q"
+  },
+  {
+    "as_of": "2020–2024",
+    "dataset": "American Community Survey 5-year estimates, 2020–2024",
+    "id": "census_acs",
+    "notes": "Price-to-income = median owner-occupied home value (B25077) / median household income (B19013). Rent burden = median gross rent as % of household income (B25071).",
+    "publisher": "U.S. Census Bureau",
+    "retrieved": "2026-11-12",
+    "series": [
+      "B25077",
+      "B19013",
+      "B25071"
+    ],
+    "url": "https://www.census.gov/programs-surveys/acs/data/summary-file.html"
+  },
+  {
+    "as_of": "Q2 2026",
+    "dataset": "Distributional Financial Accounts: share of household net worth by wealth percentile",
+    "id": "fed_dfa",
+    "publisher": "Federal Reserve Board, via FRED",
+    "retrieved": "2026-11-12",
+    "series": [
+      "WFRBST01134",
+      "WFRBSN09161",
+      "WFRBSN40188",
+      "WFRBSB50215"
+    ],
+    "url": "https://www.federalreserve.gov/releases/z1/dataviz/dfa/"
+  },
+  {
+    "as_of": "FY2025",
+    "dataset": "Historical Tables (FY2027 Budget), Table 7.1: Federal Debt at the End of Year",
+    "id": "omb_hist_7_1",
+    "publisher": "Office of Management and Budget",
+    "retrieved": "2026-11-12",
+    "series": [
+      "Debt held by the public, % of GDP"
+    ],
+    "url": "https://www.whitehouse.gov/omb/information-resources/budget/historical-tables/"
+  },
+  {
+    "as_of": "February 2026",
+    "dataset": "The Budget and Economic Outlook: 10-Year Budget Projections (February 2026)",
+    "id": "cbo_baseline",
+    "notes": "Baseline projection, FY2026–FY2036: it assumes current law stays as it is. File: 51118-2026-02-Budget-Projections.xlsx (downloaded by hand; cbo.gov blocks scripts).",
+    "publisher": "Congressional Budget Office",
+    "retrieved": "2026-11-12",
+    "series": [
+      "Table 1-1: Debt held by the public, % of GDP"
+    ],
+    "url": "https://www.cbo.gov/data/budget-economic-data"
+  },
+  {
+    "as_of": "FY2025",
+    "dataset": "Historical Tables (FY2027 Budget), Table 3.1: Outlays by Superfunction and Function",
+    "id": "omb_hist_3_1",
+    "notes": "Actual outlays only; the table's estimate columns (administration proposals) are excluded.",
+    "publisher": "Office of Management and Budget",
+    "retrieved": "2026-11-12",
+    "series": [
+      "National Defense (050)",
+      "Net Interest (900)"
+    ],
+    "url": "https://www.whitehouse.gov/omb/information-resources/budget/historical-tables/"
+  },
+  {
+    "as_of": "Q1 2026",
+    "dataset": "Federal debt held by foreign and international investors; federal debt held by the public",
+    "id": "fred_foreign",
+    "notes": "Share = foreign holdings / total debt held by the public.",
+    "publisher": "U.S. Treasury (TIC) and Federal Reserve, via FRED",
+    "retrieved": "2026-11-12",
+    "series": [
+      "FDHBFIN",
+      "FYGFDPUN"
+    ],
+    "url": "https://fred.stlouisfed.org/series/FDHBFIN"
+  },
+  {
+    "as_of": "October 2026",
+    "dataset": "10-year Treasury constant maturity rate, monthly average",
+    "id": "fred_gs10",
+    "publisher": "Federal Reserve Board, via FRED",
+    "retrieved": "2026-11-12",
+    "series": [
+      "GS10"
+    ],
+    "url": "https://fred.stlouisfed.org/series/GS10"
+  },
+  {
+    "as_of": "2025",
+    "dataset": "GDP per capita, PPP (constant 2021 international $)",
+    "id": "wb_gdp_ppp",
+    "notes": "Ranks use 2025, the latest year most countries report. Population (SP.POP.TOTL) is used only to rank among countries of 10 million people or more.",
+    "publisher": "World Bank, World Development Indicators",
+    "retrieved": "2026-11-12",
+    "series": [
+      "NY.GDP.PCAP.PP.KD"
+    ],
+    "url": "https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.KD"
+  },
+  {
+    "as_of": "latest survey year per country",
+    "dataset": "Poverty headcount ratio at $3.00 a day (2021 PPP), % of population",
+    "id": "wb_poverty",
+    "notes": "The international poverty line was revised in 2025 from $2.15 (2017 PPP) to $3.00 (2021 PPP).",
+    "publisher": "World Bank, Poverty and Inequality Platform",
+    "retrieved": "2026-11-12",
+    "series": [
+      "SI.POV.DDAY"
+    ],
+    "url": "https://data.worldbank.org/indicator/SI.POV.DDAY"
+  },
+  {
+    "as_of": "2019–2025 (latest per country)",
+    "dataset": "Income Distribution Database: poverty rate after taxes and transfers (50% of median)",
+    "id": "oecd_idd",
+    "notes": "OECD member countries with data (Colombia has none in this database); each country's latest year.",
+    "publisher": "OECD",
+    "retrieved": "2026-11-12",
+    "url": "https://sdmx.oecd.org/public/rest/data/OECD.WISE.INE,DSD_WISE_IDD@DF_IDD,/.A.PR_INC_DISP._Z.PT_POP._T.METH2012.D_CUR.PL_50?startPeriod=2010&format=csvfilewithlabels"
+  }
+]

@@ -5,3 +5,6 @@ _site/
 .venv/
 __pycache__/
 .DS_Store
+# Raw downloads (ACS summary files, OMB and CBO workbooks). fetch_all.py
+# rebuilds data/*.json from them; only the small outputs are committed.
+data/raw/

@@ -1,2 +1,4 @@
 # Builds the page from content/sections/*.md (scripts/build_site.py).
 markdown==3.9
+# Reads the OMB and CBO Excel workbooks (scripts/fetchers/omb.py, cbo.py).
+openpyxl==3.1.5
