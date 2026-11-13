@@ -106,6 +106,22 @@
     <section id="debt" data-nav-label="Debt">
       <h2>The debt and the dollar</h2>
       {{section:debt}}
+      <figure class="chart" id="chart-3e">
+        <figcaption>
+          <h3 class="chart-title">Who owns the debt</h3>
+          <p class="chart-sub">Gross federal debt by holder, {{fact:owners_period}}. Each square is 1% of the ${{fact:owners_total_tn}} trillion total. The government owes {{fact:owners_trust_pct}}% of it to its own trust funds, such as Social Security. These shares are of gross debt, so they differ from the {{fact:foreign_share}}% above, which is the foreign share of debt held by the public (trust funds left out).</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBATN, FDHBFRBN, FDHBFIN, FYGFDPUN). Domestic investors are the remainder: debt held by the public minus the Federal Reserve and foreign investors.</p>
+      </figure>
+      {{section:debt_2}}
+      <figure class="chart" id="chart-3b">
+        <figcaption>
+          <h3 class="chart-title">Interest on the debt and national defense</h3>
+          <p class="chart-sub">Federal outlays by fiscal year, actual through FY{{fact:omb_latest_year}}. Switch between dollars (not adjusted for inflation) and % of GDP.</p>
+        </figcaption>
+        <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 3.1 (functions 050 and 900).</p>
+      </figure>
+      {{section:debt_3}}
       <figure class="chart" id="chart-3d">
         <figcaption>
           <h3 class="chart-title">The debt has grown past the size of the economy</h3>
@@ -119,20 +135,6 @@
           <p class="chart-sub">% of GDP by fiscal year. Actual through FY{{fact:omb_latest_year}}; dashed line is CBO's baseline projection ({{fact:cbo_vintage}}), which assumes current law stays as it is.</p>
         </figcaption>
         <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 7.1; Congressional Budget Office, The Budget and Economic Outlook ({{fact:cbo_vintage}}).</p>
-      </figure>
-      <figure class="chart" id="chart-3b">
-        <figcaption>
-          <h3 class="chart-title">Interest on the debt and national defense</h3>
-          <p class="chart-sub">Federal outlays by fiscal year, actual through FY{{fact:omb_latest_year}}. Switch between dollars (not adjusted for inflation) and % of GDP.</p>
-        </figcaption>
-        <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 3.1 (functions 050 and 900).</p>
-      </figure>
-      <figure class="chart" id="chart-3e">
-        <figcaption>
-          <h3 class="chart-title">Who owns the debt</h3>
-          <p class="chart-sub">Gross federal debt by holder, {{fact:owners_period}}. Each square is 1% of the ${{fact:owners_total_tn}} trillion total. The government owes {{fact:owners_trust_pct}}% of it to its own trust funds, such as Social Security.</p>
-        </figcaption>
-        <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBATN, FDHBFRBN, FDHBFIN, FYGFDPUN). Domestic investors are the remainder: debt held by the public minus the Federal Reserve and foreign investors.</p>
       </figure>
       <figure class="chart chart--small" id="chart-3c">
         <figcaption>

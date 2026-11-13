@@ -1,0 +1,1 @@
+While scary, it's important to remember that this debt is backed by the largest Western economy and the most valuable business sector on Earth. We're on a mathematical trajectory toward debt problems, but we still have time to make informed adjustments to how our government borrows and spends, and bring this to a manageable level.
