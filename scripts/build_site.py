@@ -5,6 +5,8 @@
 - Renders site/index.html, filling two kinds of placeholder:
     {{section:name}}  the Markdown in content/sections/name.md, as HTML
     {{fact:key}}      a value from data/facts.json (also works inside the Markdown)
+    {{fact:key|abs}}  the same, without its sign ("fell {{fact:tv_pct_since_2000|abs}}%")
+    {{sources:list}}  the methods footer's source list, from data/sources.json
 - Adds ?v=<version> to the stylesheet, scripts and module imports, where the
   version is a fingerprint of the site and data files. A browser that cached
   an older styles.css would otherwise pair it with newer scripts, and charts
@@ -17,6 +19,7 @@ Run with the project's virtual environment, which has the markdown package:
     .venv/bin/python scripts/build_site.py
 """
 import hashlib
+import html
 import json
 import re
 import shutil
@@ -30,7 +33,7 @@ DATA = ROOT / "data"
 SECTIONS = ROOT / "content" / "sections"
 OUT = ROOT / "_site"
 
-PLACEHOLDER = re.compile(r"\{\{\s*(section|fact):([a-z0-9_]+)\s*\}\}")
+PLACEHOLDER = re.compile(r"\{\{\s*(section|fact|sources):([a-z0-9_]+)(\|abs)?\s*\}\}")
 # Shown for every fact until the pipeline (Phase 1) has written facts.json.
 NO_FACTS = "—"
 
@@ -45,7 +48,7 @@ def load_facts():
 
 def fill_facts(text, facts):
     def sub(m):
-        kind, key = m.groups()
+        kind, key, absolute = m.groups()
         if kind != "fact":
             return m.group(0)
         if facts is None:
@@ -53,7 +56,8 @@ def fill_facts(text, facts):
         if key not in facts:
             # Fail rather than publish a blank: a missing key is almost always a typo.
             raise SystemExit(f"error: facts.json has no key {key!r}")
-        return str(facts[key])
+        value = facts[key]
+        return str(abs(value) if absolute else value)
 
     return PLACEHOLDER.sub(sub, text)
 
@@ -63,6 +67,30 @@ def render_section(name, facts):
     if not path.exists():
         return '<p class="todo">Text for this section is still to come.</p>'
     return markdown.markdown(fill_facts(path.read_text(), facts))
+
+
+def render_sources():
+    """The footer's source list: one entry per dataset in data/sources.json,
+    with publisher, link, series IDs, the period the data runs to, and notes.
+    Long series lists fold into a <details> so they don't swamp the footer."""
+    path = DATA / "sources.json"
+    if not path.exists():
+        return '<p class="todo">Sources appear once the pipeline has run.</p>'
+    e = html.escape
+    items = []
+    for src in json.loads(path.read_text()):
+        parts = [f'<a href="{e(src["url"])}">{e(src["dataset"])}</a>. {e(src["publisher"])}. '
+                 f'Latest data: {e(src["as_of"])}. Retrieved {e(src["retrieved"])}.']
+        series = src.get("series") or []
+        codes = ", ".join(f"<code>{e(sid)}</code>" for sid in series)
+        if len(series) > 4:
+            parts.append(f'<details><summary>{len(series)} series</summary>{codes}</details>')
+        elif series:
+            parts.append(f'<span class="source-series">Series: {codes}.</span>')
+        if src.get("notes"):
+            parts.append(f'<span class="source-notes">{e(src["notes"])}</span>')
+        items.append(f'<li>{" ".join(parts)}</li>')
+    return '<ul class="sources">\n' + "\n".join(items) + "\n</ul>"
 
 
 def fingerprint():
@@ -102,7 +130,8 @@ def main():
     page = (SITE / "index.html").read_text()
     # Sections first, so facts inside the rendered Markdown are filled in too.
     page = PLACEHOLDER.sub(
-        lambda m: render_section(m.group(2), facts) if m.group(1) == "section" else m.group(0),
+        lambda m: render_section(m.group(2), facts) if m.group(1) == "section"
+        else render_sources() if m.group(1) == "sources" else m.group(0),
         page,
     )
     page = fill_facts(page, facts)

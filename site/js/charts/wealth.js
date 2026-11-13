@@ -1,6 +1,7 @@
 // Chart 2a: share of total household net worth by wealth group, stacked to
-// 100%. The top 1% sits on the baseline, so its growth reads against a flat
-// edge; groups are ordered, so they take one blue ramp (darkest = top 1%)
+// 100%. Stacked like the distribution itself: bottom 50% on the baseline,
+// top 1% on top, so the legend and tooltip (top 1% first) read in the same
+// order as the bands; groups are ordered, so they take one blue ramp (darkest = top 1%)
 // rather than four unrelated hues. A crosshair tooltip lists all four.
 import { load, fmt, parseDate, scaffold, fillTable, segmented, onWidth, showTip, moveTip, hideTip, screenPoint } from "./common.js";
 
@@ -42,8 +43,9 @@ export async function render(figure) {
     ...GROUPS.map((g) => ({ label: g.label, num: true, value: (r) => fmt.pct1(r[g.key]) })),
   ], yearly, "Share of household net worth by wealth group, percent");
 
-  // The four shares sum to 100 within rounding; stack them as given.
-  const series = d3.stack().keys(GROUPS.map((g) => g.key))(rows);
+  // The four shares sum to 100 within rounding. Stack from the bottom 50% up.
+  const series = d3.stack().keys(GROUPS.map((g) => g.key).reverse())(rows);
+  const groupOf = (key) => GROUPS.find((g) => g.key === key);
 
   let focusIndex = rows.length - 1;
   onWidth(picto, (width) => drawPictogram(picto, width, first, last));
@@ -64,7 +66,7 @@ export async function render(figure) {
     const area = d3.area().x((d) => x(d.data.date)).y0((d) => y(d[0])).y1((d) => y(d[1]));
     bands = svg.append("g").attr("class", "areas")
       .selectAll("path").data(series).join("path")
-      .attr("d", area).style("fill", (s, i) => GROUPS[i].fill);
+      .attr("d", area).style("fill", (s) => groupOf(s.key).fill);
     highlightBands(pinned); // keep a group picked in the graphic below highlighted
 
     svg.append("g").attr("class", "axis")
@@ -84,8 +86,8 @@ export async function render(figure) {
       .selectAll("text").data(series.filter((s) => last[s.key] >= 10)).join("text")
       .attr("x", lx).attr("y", (s) => y((s[s.length - 1][0] + s[s.length - 1][1]) / 2))
       .attr("dy", "0.32em").attr("text-anchor", "end")
-      .style("fill", (s) => GROUPS.find((g) => g.key === s.key).ink)
-      .text((s) => `${GROUPS.find((g) => g.key === s.key).label.split(" (")[0]} ${fmt.pct1(last[s.key])}`);
+      .style("fill", (s) => groupOf(s.key).ink)
+      .text((s) => `${groupOf(s.key).label.split(" (")[0]} ${fmt.pct1(last[s.key])}`);
 
     const cross = svg.append("g").attr("class", "crosshair").style("display", "none");
     cross.append("line").attr("y1", m.top).attr("y2", height - m.bottom);
@@ -163,8 +165,10 @@ function drawPictogram(el, width, firstRow, lastRow) {
   let groups = groupsFor(rowOf());
   const byKey = () => new Map(groups.map((g) => [g.key, g]));
 
-  const gap = width < 420 ? 16 : 40;
-  const cell = Math.max(12, Math.min(22, Math.floor((width - gap) / 20)));
+  // The two grids fill most of the chart's width: cells grow with the
+  // width, up to 38px (about 820px for both grids on desktop).
+  const gap = width < 420 ? 16 : width < 700 ? 40 : 64;
+  const cell = Math.max(12, Math.min(38, Math.floor((width - gap) / 20)));
   const side = cell * 10;
   const titleH = 22;
   const total = side * 2 + gap;

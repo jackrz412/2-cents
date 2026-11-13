@@ -5,19 +5,39 @@ the charts need (college tuition, TVs, software). Version 1 limits: 25 series
 and 10 years per request, 25 requests per day. 1985 to today is 5 requests.
 The API sometimes answers 503 (unavailable) for a while; each request is
 retried twice, 30 seconds apart, before giving up.
+
+Responses are cached for the day in data/raw/bls/, so rerunning the pipeline
+the same day (say, after a code fix) doesn't spend the daily quota again.
 """
 import datetime
+import hashlib
 import json
 import time
 import urllib.error
+
+from pathlib import Path
 
 from .common import get_json
 
 API = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
 RETRIES, WAIT = 2, 30
+CACHE = Path(__file__).resolve().parents[2] / "data" / "raw" / "bls"
 
 
 def _post(body):
+    # Cache key: the request itself plus today's date.
+    name = f"{datetime.date.today().isoformat()}-{hashlib.sha256(body).hexdigest()[:12]}.json"
+    cached = CACHE / name
+    if cached.exists():
+        return json.loads(cached.read_text())
+    resp = _request(body)
+    if resp["status"] == "REQUEST_SUCCEEDED":
+        CACHE.mkdir(parents=True, exist_ok=True)
+        cached.write_text(json.dumps(resp))
+    return resp
+
+
+def _request(body):
     for attempt in range(RETRIES + 1):
         try:
             return get_json(API, data=body, headers={"Content-Type": "application/json"})

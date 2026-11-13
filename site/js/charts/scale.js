@@ -63,10 +63,13 @@ export async function render(figure) {
   const readout = document.createElement("p");
   readout.className = "scale-readout";
   plot.after(readout);
-  const note = document.createElement("p");
-  note.className = "chart-note scale-note";
-  note.textContent = `If $10,000 sat 1 inch from $0, $1 million would be ${distance(1e6)} away, $1 billion ${distance(1e9)}, and $100 billion about ${distance(1e11)}.`;
-  readout.after(note);
+  // The physical comparison, set as a pull quote with the last distance bold.
+  const quote = document.createElement("blockquote");
+  quote.className = "scale-quote";
+  const far = document.createElement("strong");
+  far.textContent = distance(1e11);
+  quote.append(`If $10,000 sat 1 inch from $0, $1 million would be ${distance(1e6)} away, $1 billion ${distance(1e9)}, and $100 billion about `, far, ".");
+  readout.after(quote);
 
   let t = 0;
   let width = 0;
@@ -74,7 +77,7 @@ export async function render(figure) {
     if (!width) return;
     const end = endAt(t);
     const m = { left: 16, right: 16 };
-    const height = 112, base = 58;
+    const height = 140, base = 84;
     const x = d3.scaleLinear().domain([0, end]).range([m.left, width - m.right]);
     const x0 = x(0);
     const shown = MARKS.filter((v) => v <= end);
@@ -92,39 +95,50 @@ export async function render(figure) {
     const ends = svg.append("g").attr("class", "axis scale-ends");
     ends.append("line").attr("x1", x0).attr("x2", x0).attr("y1", base - 6).attr("y2", base + 6);
     ends.append("line").attr("x1", width - m.right).attr("x2", width - m.right).attr("y1", base - 6).attr("y2", base + 6);
-    ends.append("text").attr("x", x0).attr("y", base + 22).text("$0");
-    ends.append("text").attr("x", width - m.right).attr("y", base + 22).attr("text-anchor", "end").text(money(end));
+    ends.append("text").attr("x", x0).attr("y", base + 26).text("$0");
+    ends.append("text").attr("x", width - m.right).attr("y", base + 26).attr("text-anchor", "end").text(money(end));
     // An arrow past the right end when the next amount is off the line.
     if (next) {
       ends.append("path").attr("class", "scale-arrow")
-        .attr("d", `M${width - m.right - 10},${base - 18}l8,0m-4,-4l4,4l-4,4`);
+        .attr("d", `M${width - m.right - 10},${base + 40}l8,0m-4,-4l4,4l-4,4`);
     }
 
-    // Amounts on the line: a dot, a stem and a label above. Labels close to
-    // the one before them step up a row so they don't overlap.
-    let lastX = -Infinity, row = 0;
+    // Amounts on the line: a dot, a stem and a label badge above. A badge
+    // that would touch the one before it steps up a row. Badge width is
+    // estimated from the label's length (the SVG isn't in the page yet, so
+    // text can't be measured).
+    const PILL_H = 26, ROW = 34;
+    const pillW = (v) => money(v).length * 9 + 18;
+    let lastRight = -Infinity, row = 0;
     const rows = placed.map((v) => {
-      const px = x(v);
-      row = px - lastX < 52 ? (row + 1) % 2 : 0;
-      lastX = px;
-      return { v, px, row };
+      const px = x(v), w = pillW(v);
+      // Keep badges near either end inside the box.
+      const left = Math.max(m.left - 6, Math.min(width - m.right + 6 - w, px - w / 2));
+      row = left < lastRight + 6 ? (row + 1) % 2 : 0;
+      lastRight = left + w;
+      return { v, px, w, left, row, cy: base - 30 - row * ROW };
     });
-    const g = svg.append("g").selectAll("g").data(rows).join("g").attr("class", "scale-mark");
-    g.append("line").attr("class", "stem")
+    // Stems and dots in one layer, badges above it, so a stem never runs
+    // through a neighbor's badge.
+    const marks = svg.append("g").attr("class", "scale-mark");
+    marks.selectAll("line").data(rows).join("line").attr("class", "stem")
       .attr("x1", (d) => d.px).attr("x2", (d) => d.px)
-      .attr("y1", (d) => base - 14 - d.row * 18).attr("y2", base);
-    g.append("circle").attr("cx", (d) => d.px).attr("cy", base).attr("r", 5);
+      .attr("y1", (d) => d.cy + PILL_H / 2).attr("y2", base);
+    marks.selectAll("circle").data(rows).join("circle").attr("cx", (d) => d.px).attr("cy", base).attr("r", 5);
+    const g = svg.append("g").selectAll("g").data(rows).join("g").attr("class", "scale-mark");
+    g.append("rect").attr("class", "pill")
+      .attr("x", (d) => d.left).attr("y", (d) => d.cy - PILL_H / 2)
+      .attr("width", (d) => d.w).attr("height", PILL_H).attr("rx", PILL_H / 2);
     g.append("text")
-      .attr("x", (d) => d.px).attr("y", (d) => base - 20 - d.row * 18)
-      // Keep labels near either end inside the box.
-      .attr("text-anchor", (d) => (d.px < m.left + 22 ? "start" : d.px > width - m.right - 22 ? "end" : "middle"))
+      .attr("x", (d) => d.left + d.w / 2).attr("y", (d) => d.cy).attr("dy", "0.34em")
+      .attr("text-anchor", "middle")
       .text((d) => money(d.v));
 
     // Amounts squeezed into $0: dots drawn on top of each other, named below.
     if (squeezed.length) {
       svg.append("circle").attr("class", "scale-pile").attr("cx", x0).attr("cy", base).attr("r", 5);
       svg.append("text").attr("class", "scale-pile-label")
-        .attr("x", x0).attr("y", base + 42)
+        .attr("x", x0).attr("y", base + 48)
         .text(`${list(squeezed.map(money))} ${squeezed.length > 1 ? "are all" : "is"} squeezed into $0`);
     }
 

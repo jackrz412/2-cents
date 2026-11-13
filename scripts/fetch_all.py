@@ -60,6 +60,8 @@ WEALTH = {  # Fed Distributional Financial Accounts, mirrored on FRED
 }
 FOREIGN, DEBT_TOTAL, YIELD_10Y = "FDHBFIN", "FYGFDPUN", "GS10"
 GDP_PPP, POVERTY, POPULATION = "NY.GDP.PCAP.PP.KD", "SI.POV.DDAY", "SP.POP.TOTL"
+GDP_USD = "NY.GDP.MKTP.CD"  # World Bank: GDP, current US$ (total, market exchange rates)
+US_GDP = "GDP"  # FRED: US nominal GDP, billions of dollars, seasonally adjusted annual rate
 # OECD's 38 member countries (membership, not data); the OECD feed also covers some partners.
 OECD_MEMBERS = set(
     "AUS AUT BEL CAN CHL COL CRI CZE DNK EST FIN FRA DEU GRC HUN ISL IRL ISR ITA JPN KOR LVA LTU "
@@ -387,6 +389,30 @@ def main():
         "us_relative_poverty_rank": rows.index(us_rel) + 1, "oecd_count": len(rows),
         "oecd_median_relative_poverty": round(statistics.median(r["rate"] for r in rows), 1),
     })
+    # Total GDP (market exchange rates), to put net interest in perspective:
+    # the largest economy smaller than one year of US net interest.
+    total = {c: v for c, v in worldbank.fetch(GDP_USD, since=rank_year - 3).items() if c in names_wb}
+    size_year = statistics.mode(max(v) for v in total.values())
+    by_size = sorted(((v[size_year], c) for c, v in total.items() if size_year in v), reverse=True)
+    interest = facts["net_interest_bn"] * 1e9
+    i = next(i for i, (v, _) in enumerate(by_size) if v < interest)
+    facts.update({
+        "interest_beats_country": names_wb[by_size[i][1]], "interest_beats_rank": i + 1,
+        "interest_beats_gdp_bn": round(by_size[i][0] / 1e9),
+        "countries_bigger_than_interest": i, "gdp_size_year": size_year,
+    })
+    sources.append(source(
+        "wb_gdp_usd", "GDP (current US$)", "World Bank, World Development Indicators",
+        worldbank.page(GDP_USD), str(size_year), series=[GDP_USD],
+        notes=f"Ranked by {size_year}, the latest year most countries report; compared with US net interest "
+              "for the latest fiscal year (OMB)."))
+
+    us = fred.fetch([US_GDP], key, start=f"{today.year - 2}-01-01")[US_GDP]["obs"]
+    facts.update({"us_gdp_tn": round(us[-1][1] / 1000, 1), "us_gdp_period": quarter_name(us[-1][0])})
+    sources.append(source(
+        "fred_gdp", "Gross domestic product, nominal, seasonally adjusted annual rate",
+        "U.S. Bureau of Economic Analysis, via FRED", fred.page(US_GDP), quarter_name(us[-1][0]), series=[US_GDP]))
+
     sources.append(source(
         "oecd_idd", "Income Distribution Database: poverty rate after taxes and transfers (50% of median)",
         "OECD", oecd.PAGE, f"{min(years)}–{max(years)} (latest per country)",

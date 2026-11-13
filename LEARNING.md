@@ -80,6 +80,11 @@ concrete; newest phase at the bottom of each list.
 - **`aria-live`.** Marks a part of the page whose text changes, so screen readers announce the new text. The coins-per-person line uses it.
 - **Largest remainder rounding.** Rounding parts so they still add up to the whole: round everything down, then give the leftover units to the parts with the biggest fractions. The 100-coin graphic uses it.
 
+### Phase 5
+
+- **Nominal GDP.** The value of everything an economy produces, in today's dollars (not adjusted for inflation). FRED's `GDP` series is a seasonally adjusted *annual rate*: one quarter's output scaled up to a year.
+- **Market exchange rates vs. PPP.** Total GDP compared at market exchange rates (World Bank `NY.GDP.MKTP.CD`) shows the US as the largest economy; adjusted for local prices (PPP), China's is larger. The globe uses PPP per person, the fairer measure of living standards.
+
 ## Decision log
 
 ### Phase 0
@@ -141,7 +146,7 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 2.4 | Map breaks: price to income 3 / 4 / 5 / 6, rent burden 28 / 30 / 32 / 34%. The housing map's warm ramp, the same in both modes | Quantiles; a continuous scale | Fixed breaks keep a color's meaning when the data updates. 3, 4 and 5 are the usual "affordable / moderately / seriously / severely unaffordable" lines for price to income (Demographia's categories); 6 splits off the extreme states. 30% of income is HUD's cost-burden line, so it sits on a break. |
 | 2.5 | Chart 1a: overall CPI in gray (the reference), wages in the text color, the four core costs in colors 1–4; each line labeled at its end with its latest value (desktop), spread apart where lines end close together, with a short leader line back to the line | Six categorical colors; no end labels (chips and tooltip only) | The story is core costs vs. the two references, so those stand apart by being neutral. The first version had no end labels; on review the chart didn't explain itself at a glance, so they were added. On phones there's no room, so the chips (legend) and tooltip carry it. |
 | 2.6 | Chart 1b: rises orange, falls blue, overall CPI gray; wage growth as a vertical rule | One color for every bar | Up and down are opposite meanings, so they get opposite (warm/cool) hues. The wage rule answers "did this outrun my pay?" at a glance. On phones each category name moves above its bar. |
-| 2.7 | Chart 2a: top 1% on the baseline, one blue ramp (darkest = top 1%), labels inside the three wide bands | Bottom 50% on the baseline; four unrelated hues | The flat baseline makes the top 1%'s rise readable. The bottom 50%'s band (2–4%) is too thin for a label; the legend and tooltip carry it. |
+| 2.7 | Chart 2a: one blue ramp (darkest = top 1%), labels inside the three wide bands. *Revised in Phase 5 (Jack):* top 1% on top, bottom 50% on the baseline | Top 1% on the baseline (the first version); four unrelated hues | Stacked like the distribution it shows, and in the same order as the legend and tooltip. The top 1% still reads against a flat edge: the 100% line at the top. The bottom 50%'s band (2–4%) is too thin for a label; the legend and tooltip carry it. |
 | 2.8 | Every chart gets a closed "Show the data" table, an `aria-label` summary built from the data, and keyboard reading (arrow keys on line/area charts, arrow keys between states on the map) | Tooltips only | The spec asks for text summaries and keyboard access; a table is the full equivalent for anyone who can't use the chart, and tooltips never hide a value that isn't elsewhere. |
 | 2.9 | Chart 2b (asset composition) not built | Build it from the DFA CSV | First on the spec's cut list, and it needs a new fetcher (the DFA CSV isn't on FRED). Kept in "Next". |
 | 2.10 | The build adds a content fingerprint (`?v=…`) to the stylesheet, scripts, module imports and data requests; key SVG attributes (`fill="none"` on lines, transparent hit areas) are set in JavaScript as well as CSS | Tell readers to hard-refresh; a no-cache dev server | A cached old `styles.css` with new scripts drew Chart 1a as black streaks and Chart 1b as black blocks (Jack saw this; the map was fine because its colors are set in the script). Versioned URLs fix it for everyone, including GitHub Pages' 10-minute cache, and the attributes mean a missing stylesheet gives plain black-and-white charts, not black shapes. |
@@ -173,6 +178,19 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 4.4 | The globe starts over North America and auto-rotates slowly until the reader drags, scrolls or taps; no auto-rotate with reduced motion; tap shows the tooltip on touch screens | Start over the Atlantic; always rotate | The US is the subject. Stopping on first touch means it stays where the reader put it. |
 | 4.5 | Chart 4a: the US bar in the accent blue, every other country gray, US value labeled, OECD median as a rule | 37 bars in one color with every value labeled | The story is one country against the rest; graying the rest makes the US bar stand out without a legend. All values are in the tooltip and table. |
 | 4.6 | Extruded country heights (cut list item 3) not built | Height by GDP | Flat colors already read clearly, and extrusion makes small countries harder to hover. Kept in "Next". |
+
+### Phase 5
+
+| # | Decision | Alternatives | Why |
+|---|---|---|---|
+| 5.1 | Prose is drafted from content/bullets.md, with every number as a `{{fact:...}}` placeholder; claims the data couldn't back were rewritten with Jack (e.g. "almost the entire pie" became "most of the pie"; "worse off than their parents" became "the essentials take a bigger bite") | Type numbers into the prose; keep claims as first written | A typed number goes stale on the next refresh, and a claim a reader can disprove with the chart right below it undercuts the whole page. |
+| 5.2 | The "interest vs. a country's economy" comparison is computed: World Bank total GDP (current US$) is ranked, and the largest economy smaller than a year of net interest is named | Pick a country by hand | The first draft said "as much as Belgium", but Belgium's GDP is well below the interest bill. Computing it keeps the comparison right as both numbers change. |
+| 5.3 | `{{fact:key\|abs}}` drops a value's sign | Store separate positive facts for every fall | "TV prices fell -99%" reads wrong; one modifier covers every falling price. |
+| 5.4 | BLS responses are cached for the day in data/raw/bls/ | Always call the API | BLS v1 allows 25 requests a day and each refresh uses 5. A same-day rerun after a code fix shouldn't spend the quota. |
+| 5.5 | Outside facts that would need new citations (credit ratings, the dollar's share of reserves, university rankings, oil output) stay in bullets.md as context, out of the prose | Cite them in the methods footer | Everything on the page should trace to sources.json. Any of them can come in later with a source entry. |
+| 5.6 | Charts break out to 54rem (`--chart-width`), a little wider than the 46rem text, instead of 64rem | Text width, as in the LLM lab article; the full 64rem | Jack's call: close to the lab article's look, with a little extra room for end labels and the globe. The page frame keeps `--wide-width`. |
+| 5.7 | Methods footer: a hand-written methods note (`content/sections/methods.md`) plus a source list the build generates from sources.json (`{{sources:list}}`); series lists longer than 4 fold into a "21 series" toggle | A hand-written source list | The list can't drift from the data: a new source in the pipeline shows up in the footer on the next build. |
+| 5.8 | Number line: amount labels in outlined badges, $0 and the end value in larger, darker type, and the "1 inch" comparison as a pull quote with the last distance in bold (Jack's request) | Plain labels; the comparison as a small italic note | The labels are the point of the graphic. The quote is set in the sans, because only the 600 weight of the serif is loaded, so bold wouldn't stand out in it. |
 
 ## Next (ideas, out of scope for v1)
 

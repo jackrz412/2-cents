@@ -1,6 +1,3 @@
-<!-- DRAFT (Phase 3) for Jack to review in Phase 5. No numbers here on purpose:
-     any figure added later should be a {{fact:...}} from data/facts.json. -->
-
 **Not in the usual sense.** The federal government borrows in dollars, the currency it issues. A country that borrows in someone else's currency can run out of that currency and be forced to miss payments. The US can't be forced into that position.
 
 That doesn't make the debt risk-free. The risks are different ones:

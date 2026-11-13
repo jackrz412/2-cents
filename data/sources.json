@@ -155,6 +155,29 @@
     "url": "https://data.worldbank.org/indicator/SI.POV.DDAY"
   },
   {
+    "as_of": "2025",
+    "dataset": "GDP (current US$)",
+    "id": "wb_gdp_usd",
+    "notes": "Ranked by 2025, the latest year most countries report; compared with US net interest for the latest fiscal year (OMB).",
+    "publisher": "World Bank, World Development Indicators",
+    "retrieved": "2026-11-12",
+    "series": [
+      "NY.GDP.MKTP.CD"
+    ],
+    "url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+  },
+  {
+    "as_of": "Q3 2026",
+    "dataset": "Gross domestic product, nominal, seasonally adjusted annual rate",
+    "id": "fred_gdp",
+    "publisher": "U.S. Bureau of Economic Analysis, via FRED",
+    "retrieved": "2026-11-12",
+    "series": [
+      "GDP"
+    ],
+    "url": "https://fred.stlouisfed.org/series/GDP"
+  },
+  {
     "as_of": "2019–2025 (latest per country)",
     "dataset": "Income Distribution Database: poverty rate after taxes and transfers (50% of median)",
     "id": "oecd_idd",
