@@ -9,6 +9,15 @@
   <link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/ibm-plex-serif-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
+  <!-- Scroll motion (js/reveal.js): on only without a reduced-motion preference.
+       Set here, before first paint, so text doesn't flash before hiding. If
+       reveal.js never runs, the class comes off and everything shows. -->
+  <script>
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches && "IntersectionObserver" in window) {
+      document.documentElement.classList.add("motion");
+      setTimeout(() => { if (!window.revealReady) document.documentElement.classList.remove("motion"); }, 3000);
+    }
+  </script>
 </head>
 <body>
   <!-- Same header as jackrz412.github.io. Full URLs, so the links also work
@@ -96,6 +105,13 @@
     <section id="debt" data-nav-label="Debt">
       <h2>The debt and the dollar</h2>
       {{section:debt}}
+      <figure class="chart" id="chart-3d">
+        <figcaption>
+          <h3 class="chart-title">The debt has grown past the size of the economy</h3>
+          <p class="chart-sub">Gross federal debt at the end of each quarter, and GDP (what the economy produces in a year), both in trillions of dollars, not adjusted for inflation. {{fact:debt_gross_period}}: ${{fact:debt_gross_tn}} trillion of debt, {{fact:debt_gross_pct_gdp}}% of GDP.</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Treasury, Fiscal Service, via FRED (GFDEBTN); U.S. Bureau of Economic Analysis via FRED (GDP).</p>
+      </figure>
       <figure class="chart" id="chart-3a">
         <figcaption>
           <h3 class="chart-title">Federal debt held by the public, relative to the economy</h3>
@@ -110,9 +126,16 @@
         </figcaption>
         <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 3.1 (functions 050 and 900).</p>
       </figure>
+      <figure class="chart" id="chart-3e">
+        <figcaption>
+          <h3 class="chart-title">Who owns the debt</h3>
+          <p class="chart-sub">Gross federal debt by holder, {{fact:owners_period}}. Each square is 1% of the ${{fact:owners_total_tn}} trillion total. The government owes {{fact:owners_trust_pct}}% of it to its own trust funds, such as Social Security.</p>
+        </figcaption>
+        <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBATN, FDHBFRBN, FDHBFIN, FYGFDPUN). Domestic investors are the remainder: debt held by the public minus the Federal Reserve and foreign investors.</p>
+      </figure>
       <figure class="chart chart--small" id="chart-3c">
         <figcaption>
-          <h3 class="chart-title">Who holds the debt, and what it costs to borrow</h3>
+          <h3 class="chart-title">The foreign share of the debt, and what it costs to borrow</h3>
           <p class="chart-sub">Two panels on the same time axis: the foreign share of federal debt held by the public (quarterly), and the 10-year Treasury yield (monthly average)</p>
         </figcaption>
         <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBFIN, FYGFDPUN); Federal Reserve Board via FRED (GS10).</p>
@@ -129,21 +152,32 @@
       <figure class="chart" id="globe">
         <figcaption>
           <h3 class="chart-title">How rich the US is, by world standards</h3>
-          <p class="chart-sub">GDP per person at purchasing power parity, or the share of people in extreme poverty, by country. Drag to spin, scroll or pinch to zoom, hover or tap a country.</p>
+          <p class="chart-sub">Three views by country: GDP per person at purchasing power parity (living standards), total GDP (the size of each economy: what it produces in a year, not the wealth it has built up), and the share of people in extreme poverty. Drag to spin, scroll or pinch to zoom, hover or tap a country.</p>
         </figcaption>
-        <p class="chart-source">Source: World Bank, World Development Indicators (NY.GDP.PCAP.PP.KD) and Poverty and Inequality Platform (SI.POV.DDAY). Country shapes: Natural Earth. Small countries such as Singapore don't show at this scale; they're in the table.</p>
+        <p class="chart-source">Source: World Bank, World Development Indicators (NY.GDP.PCAP.PP.KD, NY.GDP.MKTP.CD) and Poverty and Inequality Platform (SI.POV.DDAY). Country shapes: Natural Earth. Small countries such as Singapore don't show at this scale; they're in the table.</p>
       </figure>
       <figure class="chart chart--small" id="chart-4a">
         <figcaption>
           <h3 class="chart-title">Relative poverty in rich countries</h3>
           <p class="chart-sub">Share of people with disposable income below half their country's median, latest year available ({{fact:oecd_count}} OECD countries)</p>
+          <div class="chart-read">
+            <p><strong>How to read it:</strong> each bar is one country. Line up everyone in that country by income after taxes and government benefits, and find the person in the middle. If that middle income were $100, anyone living on less than $50 counts as relatively poor. A longer bar means more people far behind the typical person in their own country.</p>
+            <p>It compares people with their neighbors, not with the rest of the world: someone counted here can still be well off by global standards. In the US, {{fact:us_relative_poverty}}% of people fall that far behind the middle.</p>
+          </div>
         </figcaption>
         <p class="chart-source">Source: OECD Income Distribution Database (poverty rate after taxes and transfers, 50% of median).</p>
       </figure>
     </section>
 
     <section id="closing" data-nav-label="Closing">
-      <h2>Putting it together</h2>
+      <h2 class="with-coin">
+        <svg class="coin" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="20" cy="20" r="18" />
+          <circle cx="20" cy="20" r="13.5" />
+          <text x="20" y="25.5" text-anchor="middle">2¢</text>
+        </svg>
+        Putting it together
+      </h2>
       {{section:closing}}
     </section>
 
@@ -156,6 +190,7 @@
   </main>
 
   <script src="js/nav.js"></script>
+  <script src="js/reveal.js"></script>
   <!-- Pinned versions, as on the housing map. -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>

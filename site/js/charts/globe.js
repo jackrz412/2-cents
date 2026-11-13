@@ -1,6 +1,6 @@
-// Globe: countries colored by GDP per capita (PPP) or by the share of people
-// below the World Bank's international poverty line, with a switch between
-// the two. globe.gl (Three.js/WebGL) draws the 3D globe: drag to spin, scroll
+// Globe: countries colored by GDP per capita (PPP), total GDP (market
+// exchange rates) or the share of people below the World Bank's
+// international poverty line, with a switch between the three. globe.gl (Three.js/WebGL) draws the 3D globe: drag to spin, scroll
 // or pinch to zoom, a slow auto-rotate until the reader touches it. Where
 // WebGL isn't available, or the library fails to load, a flat D3 world map
 // with the same colors, tooltip and legend takes its place.
@@ -15,6 +15,7 @@ const GLOBE_SRC = "https://cdn.jsdelivr.net/npm/globe.gl@2.46.2/dist/globe.gl.mi
 // map's 6-class warm ramp. WebGL can't read CSS variables, so these are hex.
 const BLUE6 = ["#b7d3f6", "#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281"];
 const WARM6 = ["#ffeccd", "#febc68", "#f08c0b", "#cc6605", "#a24717", "#6b372a"];
+const usd = (bn) => (bn >= 1000 ? `$${d3.format(".1f")(bn / 1000)} trillion` : `$${d3.format(",.0f")(bn)} billion`);
 
 // Fixed breaks (LEARNING.md decision 4.3). GDP roughly doubles per class.
 const METRICS = {
@@ -26,6 +27,16 @@ const METRICS = {
     tick: (v) => `$${v / 1000}K`,
     value: (c) => c.gdp_pc,
     format: (v) => `$${d3.format(",")(v)}`,
+  },
+  size: {
+    label: "Total GDP",
+    title: "Total GDP, current US$ (size of the economy)",
+    // Each class roughly 4-5 times the last.
+    breaks: [25, 100, 500, 2000, 10000],
+    colors: BLUE6, // one view shows at a time, so it shares the default ramp
+    tick: (v) => (v >= 1000 ? `$${v / 1000}T` : `$${v}B`),
+    value: (c) => c.gdp_usd_bn,
+    format: usd,
   },
   poverty: {
     label: "Extreme poverty",
@@ -70,6 +81,8 @@ export async function render(figure) {
     { label: "GDP per person (PPP $)", num: true, value: (r) => (r.gdp_pc == null ? "—" : d3.format(",")(r.gdp_pc)) },
     { label: `Rank (${world.gdp_rank_year})`, num: true, value: (r) => (r.gdp_rank == null ? "—" : String(r.gdp_rank)) },
     { label: "Year", num: true, value: (r) => String(r.gdp_year ?? "—") },
+    { label: "Total GDP, $ billions", num: true, value: (r) => (r.gdp_usd_bn == null ? "—" : d3.format(",.0f")(r.gdp_usd_bn)) },
+    { label: `Size rank (${world.size_rank_year})`, num: true, value: (r) => (r.gdp_usd_rank == null ? "—" : String(r.gdp_usd_rank)) },
     { label: `Below ${world.poverty_line}, %`, num: true, value: (r) => (r.poverty == null ? "—" : d3.format(".1f")(r.poverty)) },
     { label: "Survey year", num: true, value: (r) => String(r.poverty_year ?? "—") },
   ], rows, "GDP per person and extreme poverty by country");
@@ -92,13 +105,24 @@ export async function render(figure) {
         { value: c.gdp_rank ? `#${c.gdp_rank} of ${world.gdp_rank_count}` : "Not ranked", label: c.gdp_rank ? `countries, ${world.gdp_rank_year}` : `no ${world.gdp_rank_year} figure yet` },
       ];
     }
+    if (metric === "size") {
+      return [
+        { value: m.format(v), label: `GDP, ${c.gdp_usd_year}` },
+        { value: c.gdp_usd_rank ? `#${c.gdp_usd_rank} of ${world.size_rank_count}` : "Not ranked", label: c.gdp_usd_rank ? `largest economies, ${world.size_rank_year}` : `no ${world.size_rank_year} figure yet` },
+      ];
+    }
     return [{ value: m.format(v), label: `below ${world.poverty_line}, ${c.poverty_year}` }];
   };
   const nameOf = (f) => countries[f.id]?.name ?? f.properties.name;
 
   const summary = () => {
     const us = countries.USA;
-    return `Globe of countries colored by ${METRICS[metric].title}. United States: ${metric === "gdp" ? `$${d3.format(",")(us.gdp_pc)} per person, rank ${us.gdp_rank} of ${world.gdp_rank_count}` : `${us.poverty}% (${us.poverty_year})`}. Every value is in the data table below.`;
+    const usText = {
+      gdp: `$${d3.format(",")(us.gdp_pc)} per person, rank ${us.gdp_rank} of ${world.gdp_rank_count}`,
+      size: `${usd(us.gdp_usd_bn)}, rank ${us.gdp_usd_rank} of ${world.size_rank_count}`,
+      poverty: `${us.poverty}% (${us.poverty_year})`,
+    }[metric];
+    return `Globe of countries colored by ${METRICS[metric].title}. United States: ${usText}. Every value is in the data table below.`;
   };
 
   const ctx = { figure, plot, features, colorOf, tipFor, nameOf, summary };

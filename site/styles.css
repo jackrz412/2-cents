@@ -210,6 +210,8 @@ h1 {
 }
 @media (min-width: 720px) { h1 { font-size: var(--text-3xl); } }
 h2 { font-size: var(--text-xl); margin: 0 0 var(--space-3); }
+/* "Putting it together": the title's coin, at heading size. */
+h2.with-coin { display: flex; align-items: center; gap: var(--space-2); }
 
 .coin { flex: none; width: 1.1em; height: 1.1em; }
 .coin circle { fill: none; stroke: var(--color-coin); stroke-width: 2.5; }
@@ -256,7 +258,8 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
            margin-right: calc((var(--content-width) - var(--chart-width)) / 2); }
 }
 .chart figcaption { margin-bottom: var(--space-3); }
-.chart-title { margin: 0; font: 600 var(--text-base)/var(--leading-tight) var(--font-sans); }
+.chart-title { margin: 0; font: 600 1.1875rem/var(--leading-tight) var(--font-sans); } /* 19px */
+@media (min-width: 720px) { .chart-title { font-size: var(--text-lg); } }
 .chart-sub { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-source { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-error { font-size: var(--text-sm); color: var(--color-muted); font-style: italic; }
@@ -326,7 +329,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .map-legend { font-size: var(--text-sm); }
 .legend-title { margin: 0 0 var(--space-1); color: var(--color-muted); }
 .legend-scale { display: flex; flex-wrap: wrap; gap: 2px; }
-.legend-cell { display: flex; flex-direction: column; gap: 2px; min-width: 72px; }
+.legend-cell { display: flex; flex: none; flex-direction: column; gap: 2px; min-width: 72px; padding-right: 4px; }
 .legend-cell .legend-swatch { width: 100%; height: 10px; border-radius: 0; }
 .legend-tick { color: var(--color-muted); font-variant-numeric: tabular-nums; font-size: 12px; }
 
@@ -395,7 +398,8 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   display: flex; flex-direction: column; align-items: center; text-align: center;
   margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--color-border);
 }
-.picto-heading { margin: 0; max-width: 44rem; font: 600 var(--text-base)/var(--leading-tight) var(--font-serif); }
+.picto-heading { margin: 0; max-width: 44rem; font: 600 1.1875rem/var(--leading-tight) var(--font-serif); }
+@media (min-width: 720px) { .picto-heading { font-size: var(--text-lg); } }
 .picto-when { margin: var(--space-1) 0 var(--space-4); font-size: var(--text-sm); color: var(--color-muted); }
 .pictogram svg { display: block; max-width: 100%; height: auto; overflow: visible; }
 .pictogram .picto-title { fill: var(--color-muted); font: 12px var(--font-sans); }
@@ -467,3 +471,56 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 }
 .scale-quote strong { font-weight: 600; }
 .scale-readout { min-height: 3em; margin: var(--space-2) 0; font-size: var(--text-sm); }
+
+/* Chart 3e: who owns the debt. Waffle on the left, key on the right; stacked on phones. */
+.owners-plot { display: grid; gap: var(--space-4); align-items: center; min-height: 0; }
+@media (min-width: 640px) { .owners-plot { grid-template-columns: minmax(0, 20rem) 1fr; } }
+.owners-grid { max-width: 20rem; }
+.chart .owners-cell { transition: opacity 0.15s; }
+.chart .owners-cell.dim, .owners-key li.dim { opacity: 0.25; }
+.owners-key { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.owners-key li { display: flex; gap: var(--space-2); align-items: baseline; transition: opacity 0.15s; border-radius: 4px; }
+.owners-key li:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+.owners-key .legend-swatch { width: 14px; height: 14px; border-radius: 3px; transform: translateY(2px); }
+.owners-key strong { font-weight: 600; }
+.owners-nums { font-variant-numeric: tabular-nums; }
+.owners-detail { display: block; font-size: var(--text-sm); color: var(--color-muted); }
+@media (prefers-reduced-motion: reduce) { .chart .owners-cell, .owners-key li { transition: none; } }
+
+/* Chart 4a: plain-language "how to read it" note under the subtitle. */
+.chart-read {
+  margin-top: var(--space-3); padding: var(--space-3); max-width: 44rem;
+  background: var(--color-surface); border-radius: var(--radius); font-size: var(--text-md);
+}
+.chart-read p { margin: 0; }
+.chart-read p + p { margin-top: var(--space-2); }
+.chart-read strong { font-weight: 600; }
+
+/* --- Scroll motion ---------------------------------------------------------------
+   The head script adds .motion only with prefers-reduced-motion: no-preference
+   and IntersectionObserver support; without it everything shows as is.
+   js/reveal.js adds .is-in once an element scrolls into view (once only).
+   Text fades and rises; charts fade in, then their plot fills left to right
+   (lines draw, bars grow) and grid squares pop in one after another.
+   .drawn, after the first fill, stops redraws (resize, toggles) replaying it. */
+.motion .reveal {
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.motion .reveal.is-in { opacity: 1; transform: none; }
+.motion .chart.is-in:not(.drawn) .chart-plot > svg,
+.motion .chart.is-in:not(.drawn) .panel-plot > svg {
+  animation: fill-in 1.2s 0.15s cubic-bezier(0.45, 0, 0.25, 1) backwards;
+}
+.motion .chart.is-in:not(.drawn) .owners-cell {
+  transform-box: fill-box; transform-origin: center;
+  animation: cell-in 0.35s ease-out backwards;
+  animation-delay: calc(0.2s + var(--order) * 12ms);
+}
+.motion .chart.is-in:not(.drawn) .pictogram .unit {
+  animation: unit-in 0.3s ease-out backwards;
+  animation-delay: calc(0.2s + var(--order) * 8ms);
+}
+@keyframes fill-in { from { clip-path: inset(-20px 100% -40px -60px); } to { clip-path: inset(-20px -200px -40px -60px); } }
+@keyframes cell-in { from { opacity: 0; transform: scale(0.4); } }
+@keyframes unit-in { from { opacity: 0; } }

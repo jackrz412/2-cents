@@ -191,10 +191,10 @@ function drawPictogram(el, width, firstRow, lastRow) {
   };
   const fillOf = (key) => GROUPS.find((g) => g.key === key).fill;
   const people = grid(0, "100 people").selectAll("g").data(units("people")).join("g")
-    .attr("class", "unit person-unit").attr("transform", (d, i) => at(i));
+    .attr("class", "unit person-unit").attr("transform", (d, i) => at(i)).style("--order", (d, i) => i);
   people.append("path").attr("d", PERSON).style("fill", fillOf);
   const coins = grid(side + gap, "100 coins of wealth").selectAll("g").data(units("coins")).join("g")
-    .attr("class", "unit coin-unit").attr("transform", (d, i) => at(i));
+    .attr("class", "unit coin-unit").attr("transform", (d, i) => at(i)).style("--order", (d, i) => i);
   coins.append("circle").attr("class", "coin-face").attr("cx", 5).attr("cy", 5).attr("r", 4.2).style("fill", fillOf);
   coins.append("circle").attr("class", "coin-ring").attr("cx", 5).attr("cy", 5).attr("r", 2.8).attr("fill", "none");
 

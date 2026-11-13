@@ -5,7 +5,7 @@
     "id": "bls_cpi",
     "notes": "Lines (Chart 1a) use seasonally adjusted series (CUSR...); bars (Chart 1b) use not seasonally adjusted series (CUUR...), latest 12 months vs. the base-year average (2000, or 1985 in the longer view).",
     "publisher": "U.S. Bureau of Labor Statistics",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "CUSR0000SA0",
       "CUSR0000SAH1",
@@ -36,7 +36,7 @@
     "dataset": "Median usual weekly nominal earnings, full-time wage and salary workers, 16+",
     "id": "fred_wages",
     "publisher": "U.S. Bureau of Labor Statistics, via FRED",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "LES1252881500Q"
     ],
@@ -48,7 +48,7 @@
     "id": "census_acs",
     "notes": "Price-to-income = median owner-occupied home value (B25077) / median household income (B19013). Rent burden = median gross rent as % of household income (B25071).",
     "publisher": "U.S. Census Bureau",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "B25077",
       "B19013",
@@ -61,7 +61,7 @@
     "dataset": "Distributional Financial Accounts: share of household net worth by wealth percentile",
     "id": "fed_dfa",
     "publisher": "Federal Reserve Board, via FRED",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "WFRBST01134",
       "WFRBSN09161",
@@ -75,7 +75,7 @@
     "dataset": "Historical Tables (FY2027 Budget), Table 7.1: Federal Debt at the End of Year",
     "id": "omb_hist_7_1",
     "publisher": "Office of Management and Budget",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "Debt held by the public, % of GDP"
     ],
@@ -87,7 +87,7 @@
     "id": "cbo_baseline",
     "notes": "Baseline projection, FY2026–FY2036: it assumes current law stays as it is. File: 51118-2026-02-Budget-Projections.xlsx (downloaded by hand; cbo.gov blocks scripts).",
     "publisher": "Congressional Budget Office",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "Table 1-1: Debt held by the public, % of GDP"
     ],
@@ -99,7 +99,7 @@
     "id": "omb_hist_3_1",
     "notes": "Actual outlays only; the table's estimate columns (administration proposals) are excluded.",
     "publisher": "Office of Management and Budget",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "National Defense (050)",
       "Net Interest (900)"
@@ -112,7 +112,7 @@
     "id": "fred_foreign",
     "notes": "Share = foreign holdings / total debt held by the public.",
     "publisher": "U.S. Treasury (TIC) and Federal Reserve, via FRED",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "FDHBFIN",
       "FYGFDPUN"
@@ -124,11 +124,39 @@
     "dataset": "10-year Treasury constant maturity rate, monthly average",
     "id": "fred_gs10",
     "publisher": "Federal Reserve Board, via FRED",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "GS10"
     ],
     "url": "https://fred.stlouisfed.org/series/GS10"
+  },
+  {
+    "as_of": "Q2 2026",
+    "dataset": "Federal debt: total public debt (gross federal debt)",
+    "id": "fred_debt_gross",
+    "notes": "End-of-quarter debt next to nominal GDP at a seasonally adjusted annual rate, both in trillions of dollars.",
+    "publisher": "U.S. Department of the Treasury, Fiscal Service, via FRED",
+    "retrieved": "2026-11-13",
+    "series": [
+      "GFDEBTN",
+      "GDP"
+    ],
+    "url": "https://fred.stlouisfed.org/series/GFDEBTN"
+  },
+  {
+    "as_of": "Q1 2026",
+    "dataset": "Federal debt held by agencies and trust funds, by the Federal Reserve, and by foreign investors",
+    "id": "fred_owners",
+    "notes": "Domestic investors = debt held by the public minus the Federal Reserve and foreign investors.",
+    "publisher": "U.S. Department of the Treasury and Federal Reserve, via FRED",
+    "retrieved": "2026-11-13",
+    "series": [
+      "FDHBATN",
+      "FDHBFRBN",
+      "FDHBFIN",
+      "FYGFDPUN"
+    ],
+    "url": "https://fred.stlouisfed.org/series/FDHBATN"
   },
   {
     "as_of": "2025",
@@ -136,7 +164,7 @@
     "id": "wb_gdp_ppp",
     "notes": "Ranks use 2025, the latest year most countries report. Population (SP.POP.TOTL) is used only to rank among countries of 10 million people or more.",
     "publisher": "World Bank, World Development Indicators",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "NY.GDP.PCAP.PP.KD"
     ],
@@ -148,7 +176,7 @@
     "id": "wb_poverty",
     "notes": "The international poverty line was revised in 2025 from $2.15 (2017 PPP) to $3.00 (2021 PPP).",
     "publisher": "World Bank, Poverty and Inequality Platform",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "SI.POV.DDAY"
     ],
@@ -160,7 +188,7 @@
     "id": "wb_gdp_usd",
     "notes": "Ranked by 2025, the latest year most countries report; compared with US net interest for the latest fiscal year (OMB).",
     "publisher": "World Bank, World Development Indicators",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "NY.GDP.MKTP.CD"
     ],
@@ -171,7 +199,7 @@
     "dataset": "Gross domestic product, nominal, seasonally adjusted annual rate",
     "id": "fred_gdp",
     "publisher": "U.S. Bureau of Economic Analysis, via FRED",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "series": [
       "GDP"
     ],
@@ -183,7 +211,7 @@
     "id": "oecd_idd",
     "notes": "OECD member countries with data (Colombia has none in this database); each country's latest year.",
     "publisher": "OECD",
-    "retrieved": "2026-11-12",
+    "retrieved": "2026-11-13",
     "url": "https://sdmx.oecd.org/public/rest/data/OECD.WISE.INE,DSD_WISE_IDD@DF_IDD,/.A.PR_INC_DISP._Z.PT_POP._T.METH2012.D_CUR.PL_50?startPeriod=2010&format=csvfilewithlabels"
   }
 ]

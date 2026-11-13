@@ -83,7 +83,10 @@ concrete; newest phase at the bottom of each list.
 ### Phase 5
 
 - **Nominal GDP.** The value of everything an economy produces, in today's dollars (not adjusted for inflation). FRED's `GDP` series is a seasonally adjusted *annual rate*: one quarter's output scaled up to a year.
-- **Market exchange rates vs. PPP.** Total GDP compared at market exchange rates (World Bank `NY.GDP.MKTP.CD`) shows the US as the largest economy; adjusted for local prices (PPP), China's is larger. The globe uses PPP per person, the fairer measure of living standards.
+- **Market exchange rates vs. PPP.** Total GDP compared at market exchange rates (World Bank `NY.GDP.MKTP.CD`) shows the US as the largest economy; adjusted for local prices (PPP), China's is larger. The globe uses PPP per person, the fairer measure of living standards. Its total GDP view uses market exchange rates.
+- **Gross debt vs. debt held by the public.** Gross federal debt (FRED `GFDEBTN`) is everything the Treasury owes. Part of it is owed to the government's own trust funds, such as Social Security (`FDHBATN`); the rest is *debt held by the public*, the measure economists usually compare with GDP.
+- **Waffle chart.** A 10x10 grid in which each square is 1% of a whole. It shows parts of a whole like a pie, but squares are easier to count than angles are to judge.
+- **`prefers-reduced-motion`.** A system setting some readers turn on because motion makes them dizzy or distracts them. CSS and JS can read it; this page then skips every scroll animation.
 
 ## Decision log
 
@@ -191,6 +194,10 @@ Series ID changes from the spec's candidate table (spec rule 5):
 | 5.6 | Charts break out to 54rem (`--chart-width`), a little wider than the 46rem text, instead of 64rem | Text width, as in the LLM lab article; the full 64rem | Jack's call: close to the lab article's look, with a little extra room for end labels and the globe. The page frame keeps `--wide-width`. |
 | 5.7 | Methods footer: a hand-written methods note (`content/sections/methods.md`) plus a source list the build generates from sources.json (`{{sources:list}}`); series lists longer than 4 fold into a "21 series" toggle | A hand-written source list | The list can't drift from the data: a new source in the pipeline shows up in the footer on the next build. |
 | 5.8 | Number line: amount labels in outlined badges, $0 and the end value in larger, darker type, and the "1 inch" comparison as a pull quote with the last distance in bold (Jack's request) | Plain labels; the comparison as a small italic note | The labels are the point of the graphic. The quote is set in the sans, because only the 600 weight of the serif is loaded, so bold wouldn't stand out in it. |
+| 5.9 | Chart 3d plots gross federal debt and nominal GDP on one dollar axis | Two y-axes; debt held by the public | Same unit, so one axis is honest and the crossing point means something. Gross debt is the "national debt" number people quote, and it's the total the ownership chart splits up. |
+| 5.10 | Who owns the debt is a 10x10 waffle with a key giving dollars and shares, not a pie | Pie; one stacked bar | Squares are easier to count and compare than pie angles, each square is a plain "1%", and it matches the people-and-coins grids in Section 2. Domestic investors are computed as a remainder, so the four parts always add up to the total. |
+| 5.11 | The globe's total GDP view uses the same blue ramp as GDP per person | A second hue (green) | Only one view shows at a time, and the dataviz guidance keeps one sequential hue unless two show at once. The legend title says which view is on. "Total wealth" is labeled as GDP (output per year), since GDP isn't a stock of wealth. |
+| 5.12 | Scroll motion: text and charts fade up once as they enter, then plots fill left to right and grid squares pop in; set by a head script only without a reduced-motion preference, with a 3-second fallback that shows everything if reveal.js doesn't run | Animate every redraw; per-mark draw-in for each chart | Close to the LLM lab article's draw-in. One clip-path fill covers every SVG chart without touching chart code; after the first fill, resizes and toggles redraw instantly. |
 
 ## Next (ideas, out of scope for v1)
 

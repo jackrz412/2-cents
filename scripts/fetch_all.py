@@ -59,6 +59,10 @@ WEALTH = {  # Fed Distributional Financial Accounts, mirrored on FRED
     "bottom50": "WFRBSB50215",
 }
 FOREIGN, DEBT_TOTAL, YIELD_10Y = "FDHBFIN", "FYGFDPUN", "GS10"
+# Who owns the debt. Gross debt = held by agencies and trust funds (the government
+# owing itself) + held by the public; the public part splits into the Fed,
+# foreign investors and, as the remainder, domestic investors.
+DEBT_GROSS, FED_HOLD, TRUST_HOLD = "GFDEBTN", "FDHBFRBN", "FDHBATN"
 GDP_PPP, POVERTY, POPULATION = "NY.GDP.PCAP.PP.KD", "SI.POV.DDAY", "SP.POP.TOTL"
 GDP_USD = "NY.GDP.MKTP.CD"  # World Bank: GDP, current US$ (total, market exchange rates)
 US_GDP = "GDP"  # FRED: US nominal GDP, billions of dollars, seasonally adjusted annual rate
@@ -249,7 +253,8 @@ def main():
         quarter_name(last["date"]), series=list(WEALTH.values())))
 
     # --- Section 3: debt, interest, defense, foreign holdings ------------------
-    f = fred.fetch([FOREIGN, DEBT_TOTAL, YIELD_10Y], key, start="1970-01-01")
+    f = fred.fetch([FOREIGN, DEBT_TOTAL, YIELD_10Y, DEBT_GROSS, FED_HOLD, TRUST_HOLD], key, start="1966-01-01")
+    f.update(fred.fetch([US_GDP], key, start="1966-01-01"))
     history = omb.debt(args.fresh)
     projection = cbo.fetch()
     debt = {"history": history}
@@ -330,16 +335,75 @@ def main():
         "fred_gs10", "10-year Treasury constant maturity rate, monthly average",
         "Federal Reserve Board, via FRED", fred.page(YIELD_10Y), month_name(yields[-1][0]), series=[YIELD_10Y]))
 
+    # Gross federal debt next to nominal GDP, both in trillions of dollars, on
+    # the quarters both series have.
+    gdp_q = dict(f[US_GDP]["obs"])  # billions, annual rate
+    gross = [(d, v) for d, v in f[DEBT_GROSS]["obs"] if d in gdp_q]  # millions
+    write_json("debt_vs_gdp", {
+        "debt": [[d, round(v / 1e6, 3)] for d, v in gross],
+        "gdp": [[d, round(gdp_q[d] / 1e3, 3)] for d, _ in gross],
+    })
+    summarize("debt_vs_gdp", len(gross), quarter_name(gross[0][0]), quarter_name(gross[-1][0]))
+    d_last, v_last = gross[-1]
+    # First quarter in which gross debt passed one year of GDP.
+    passed = next(d for d, v in gross if v / 1e3 > gdp_q[d])
+    facts.update({
+        "debt_gross_tn": round(v_last / 1e6, 1), "debt_gross_period": quarter_name(d_last),
+        "gdp_same_quarter_tn": round(gdp_q[d_last] / 1e3, 1),
+        "debt_gross_pct_gdp": round(v_last / 1e3 / gdp_q[d_last] * 100),
+        "debt_passed_gdp_year": int(passed[:4]),
+    })
+    sources.append(source(
+        "fred_debt_gross", "Federal debt: total public debt (gross federal debt)",
+        "U.S. Department of the Treasury, Fiscal Service, via FRED", fred.page(DEBT_GROSS),
+        quarter_name(d_last), series=[DEBT_GROSS, US_GDP],
+        notes="End-of-quarter debt next to nominal GDP at a seasonally adjusted annual rate, both in trillions of dollars."))
+
+    # Who owns it: the latest quarter every holder series has.
+    holders = {sid: dict(f[sid]["obs"]) for sid in (DEBT_GROSS, DEBT_TOTAL, FED_HOLD, TRUST_HOLD, FOREIGN)}
+    q = max(set.intersection(*(set(h) for h in holders.values())))
+    tn = {  # FRED units: GFDEBTN, FYGFDPUN and FDHBATN in millions; FDHBFRBN and FDHBFIN in billions
+        "trust": holders[TRUST_HOLD][q] / 1e6, "fed": holders[FED_HOLD][q] / 1e3,
+        "foreign": holders[FOREIGN][q] / 1e3,
+    }
+    tn["domestic"] = holders[DEBT_TOTAL][q] / 1e6 - tn["fed"] - tn["foreign"]
+    gross_q = holders[DEBT_GROSS][q] / 1e6
+    if abs(sum(tn.values()) - gross_q) > 0.05 * gross_q:  # the parts should add up to the whole
+        raise SystemExit(f"debt holders sum to {sum(tn.values()):.2f}T vs gross {gross_q:.2f}T")
+    owners = [
+        {"key": "domestic", "label": "Domestic investors", "detail": "US banks, funds, pensions, insurers, state and local governments, individuals"},
+        {"key": "foreign", "label": "Foreign investors", "detail": "Foreign governments and central banks, and private foreign investors"},
+        {"key": "trust", "label": "Federal trust funds", "detail": "Social Security, federal retirement and other government accounts: the government owing itself"},
+        {"key": "fed", "label": "Federal Reserve", "detail": "The central bank's own holdings"},
+    ]
+    for o in owners:
+        o["tn"] = round(tn[o["key"]], 2)
+        o["pct"] = round(tn[o["key"]] / sum(tn.values()) * 100, 1)
+    write_json("debt_owners", {"period": quarter_name(q), "total_tn": round(sum(tn.values()), 2), "owners": owners})
+    summarize("debt_owners", len(owners), quarter_name(q), quarter_name(q))
+    facts.update({f"owners_{o['key']}_pct": round(o["pct"]) for o in owners})
+    facts.update({"owners_period": quarter_name(q), "owners_total_tn": round(sum(tn.values()), 1)})
+    sources.append(source(
+        "fred_owners", "Federal debt held by agencies and trust funds, by the Federal Reserve, and by foreign investors",
+        "U.S. Department of the Treasury and Federal Reserve, via FRED", fred.page(TRUST_HOLD), quarter_name(q),
+        series=[TRUST_HOLD, FED_HOLD, FOREIGN, DEBT_TOTAL],
+        notes="Domestic investors = debt held by the public minus the Federal Reserve and foreign investors."))
+
     # --- Section 4: world -------------------------------------------------------
     names_wb = worldbank.countries()
     gdp = {c: v for c, v in worldbank.fetch(GDP_PPP).items() if c in names_wb}
     pov = {c: v for c, v in worldbank.fetch(POVERTY).items() if c in names_wb}
     pop = {c: v for c, v in worldbank.fetch(POPULATION).items() if c in names_wb}
+    total = {c: v for c, v in worldbank.fetch(GDP_USD, since=today.year - 6).items() if c in names_wb}
     # Rank everyone in one year: the latest year most countries have reported.
     rank_year = statistics.mode(max(v) for v in gdp.values())
     ranked = sorted(((v[rank_year], c) for c, v in gdp.items() if rank_year in v), reverse=True)
     rank = {c: i + 1 for i, (_, c) in enumerate(ranked)}
     big = [c for _, c in ranked if pop.get(c) and pop[c][max(pop[c])] >= 10_000_000]
+    # Total GDP (market exchange rates), ranked the same way.
+    size_year = statistics.mode(max(v) for v in total.values())
+    by_size = sorted(((v[size_year], c) for c, v in total.items() if size_year in v), reverse=True)
+    size_rank = {c: i + 1 for i, (_, c) in enumerate(by_size)}
 
     world = {}
     for c in sorted(names_wb):
@@ -352,9 +416,13 @@ def main():
             row.update(poverty=pov[c][y], poverty_year=y)
         if c in pop:
             row["population"] = pop[c][max(pop[c])]
+        if c in total:
+            y = max(total[c])
+            row.update(gdp_usd_bn=round(total[c][y] / 1e9, 1), gdp_usd_year=y, gdp_usd_rank=size_rank.get(c))
         if len(row) > 1:
             world[c] = row
     write_json("world", {"gdp_rank_year": rank_year, "gdp_rank_count": len(ranked),
+                         "size_rank_year": size_year, "size_rank_count": len(by_size),
                          "poverty_line": "$3.00 a day (2021 PPP)", "countries": world})
     summarize("world", len(world), "GDP pc rank year", rank_year)
     usa = world["USA"]
@@ -391,9 +459,6 @@ def main():
     })
     # Total GDP (market exchange rates), to put net interest in perspective:
     # the largest economy smaller than one year of US net interest.
-    total = {c: v for c, v in worldbank.fetch(GDP_USD, since=rank_year - 3).items() if c in names_wb}
-    size_year = statistics.mode(max(v) for v in total.values())
-    by_size = sorted(((v[size_year], c) for c, v in total.items() if size_year in v), reverse=True)
     interest = facts["net_interest_bn"] * 1e9
     i = next(i for i, (v, _) in enumerate(by_size) if v < interest)
     facts.update({
@@ -407,7 +472,7 @@ def main():
         notes=f"Ranked by {size_year}, the latest year most countries report; compared with US net interest "
               "for the latest fiscal year (OMB)."))
 
-    us = fred.fetch([US_GDP], key, start=f"{today.year - 2}-01-01")[US_GDP]["obs"]
+    us = f[US_GDP]["obs"]  # fetched with Section 3
     facts.update({"us_gdp_tn": round(us[-1][1] / 1000, 1), "us_gdp_period": quarter_name(us[-1][0])})
     sources.append(source(
         "fred_gdp", "Gross domestic product, nominal, seasonally adjusted annual rate",
