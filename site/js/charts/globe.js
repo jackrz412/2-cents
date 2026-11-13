@@ -187,11 +187,21 @@ function makeGlobe({ figure, plot, features, colorOf, tipFor, nameOf, summary })
   // Pulled back a little on phones so the whole globe fits the width.
   globe.pointOfView({ lat: 25, lng: -95, altitude: plot.clientWidth < 500 ? 2.2 : 1.75 }, 0);
   const controls = globe.controls();
-  controls.autoRotate = !reduceMotion;
   controls.autoRotateSpeed = 0.35;
   // Don't trap page scrolling on phones: zoom needs two fingers there anyway.
   controls.enableZoom = true;
-  const stop = () => { controls.autoRotate = false; };
+  // A button to pause and resume it, so keyboard users can stop the motion too.
+  const spin = document.createElement("button");
+  spin.type = "button";
+  spin.className = "chip globe-spin";
+  const setSpin = (on) => {
+    controls.autoRotate = on;
+    spin.textContent = on ? "Pause rotation" : "Resume rotation"; // the label says what a click does
+  };
+  spin.addEventListener("click", () => setSpin(!controls.autoRotate));
+  if (!reduceMotion) figure.querySelector(".chart-controls").append(spin);
+  setSpin(!reduceMotion);
+  const stop = () => setSpin(false);
   ["pointerdown", "wheel", "touchstart"].forEach((t) => plot.addEventListener(t, stop, { once: true, passive: true }));
 
   onWidth(plot, (w) => globe.width(w).height(height()));

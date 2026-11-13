@@ -154,6 +154,11 @@ export function fillTable(container, columns, rows, caption) {
     });
   }
   container.replaceChildren(table);
+  // The box scrolls when the table is wider or taller than it, so keyboard
+  // users need to be able to focus it to scroll with the arrow keys.
+  container.tabIndex = 0;
+  container.setAttribute("role", "region");
+  container.setAttribute("aria-label", caption ?? "Data table");
 }
 
 // Toggle chips: buttons with aria-pressed. items: [{ key, label, color, on }].

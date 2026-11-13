@@ -144,7 +144,21 @@ export function timeline(plot, opts) {
         } else if (event.key === "Escape") hide();
       });
 
-    plot.replaceChildren(svg.node());
+    // Too narrow for end labels: a key above the plot instead, so the lines
+    // are never told apart by color alone.
+    if (opts.endLabels && !labelled) {
+      const key = document.createElement("ul");
+      key.className = "line-key";
+      for (const s of series) {
+        const li = document.createElement("li");
+        const k = document.createElement("span");
+        k.className = "chip-key chip-key--line";
+        k.style.setProperty("--key", s.color);
+        li.append(k, s.label);
+        key.append(li);
+      }
+      plot.replaceChildren(key, svg.node());
+    } else plot.replaceChildren(svg.node());
   }
   return { draw };
 }
