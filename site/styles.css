@@ -473,12 +473,57 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .chart .scale-ends text { fill: var(--color-text); font: 600 var(--text-md) var(--font-sans); }
 .chart .scale-pile-label { fill: var(--color-text); font-size: var(--text-sm); }
 .chart-plot.scale-plot { min-height: 0; }
-.scale-quote {
-  margin: var(--space-4) 0; padding: var(--space-3) var(--space-4);
-  border-left: 3px solid var(--color-coin); background: var(--color-surface); border-radius: 0 var(--radius) var(--radius) 0;
-  font: var(--text-lg)/1.45 var(--font-sans); color: var(--color-text);
+/* "Tell me in distance": the button, and the full-screen quote it opens. */
+.scale-tell {
+  display: inline-flex; align-items: center; min-height: 44px; margin: var(--space-2) 0 var(--space-3);
+  padding: 8px 20px; border-radius: 999px; cursor: pointer;
+  font: 600 var(--text-md)/1.2 var(--font-sans); color: var(--color-text);
+  background: var(--color-surface); border: 1.5px solid var(--color-coin);
+  transition: background-color 0.15s, transform 0.1s;
 }
-.scale-quote strong { font-weight: 600; }
+.scale-tell:hover { background: var(--color-bg); }
+.scale-tell:active { transform: translateY(1px); }
+/* The dialog fills the window; the quote sits centered in it. Clicking the
+   dimmed area around the quote closes it. */
+.distance-dialog {
+  width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: var(--space-5) var(--space-3);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5);
+  border: 0; background: transparent; color: var(--color-text);
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.distance-dialog[open] { display: flex; }
+.distance-dialog.is-open { opacity: 1; }
+.distance-dialog::backdrop {
+  background: var(--color-bg); opacity: 0; transition: opacity 0.3s ease;
+}
+.distance-dialog.is-open::backdrop { opacity: 0.94; }
+.distance-quote {
+  max-width: 38rem; margin: 0; padding-left: var(--space-4); border-left: 3px solid var(--color-coin);
+  font: clamp(1.5rem, 1rem + 2.4vw, 2.5rem)/1.35 var(--font-sans); text-wrap: pretty;
+  transform: translateY(12px); transition: transform 0.4s ease;
+}
+.distance-dialog.is-open .distance-quote { transform: none; }
+.distance-quote strong { font-weight: 600; }
+.distance-quote strong .typed { box-shadow: inset 0 -0.18em 0 color-mix(in srgb, var(--color-coin) 45%, transparent); }
+.distance-quote .rest { visibility: hidden; }
+/* Zero width, drawn with a border, so it never nudges the text. */
+.distance-caret {
+  display: inline-block; width: 0; height: 1em; vertical-align: -0.12em;
+  border-left: 3px solid var(--color-coin); margin-right: -3px;
+  animation: caret-blink 1s steps(1) infinite;
+}
+.distance-caret.done { animation: caret-blink 1s steps(1) 2 forwards; }
+@keyframes caret-blink { 50% { opacity: 0; } }
+.distance-close {
+  min-height: 44px; padding: 8px 20px; border-radius: 999px; cursor: pointer;
+  font: var(--text-sm)/1.2 var(--font-sans); color: var(--color-text);
+  background: var(--color-bg); border: 1px solid var(--color-border);
+}
+.distance-close:hover { border-color: var(--color-muted); }
+@media (prefers-reduced-motion: reduce) {
+  .distance-dialog, .distance-dialog::backdrop, .distance-quote { transition: none; }
+  .distance-caret { display: none; }
+}
 .scale-readout { min-height: 3em; margin: var(--space-2) 0; font-size: var(--text-sm); }
 
 /* Chart 3e: who owns the debt. Waffle on the left, key on the right; stacked on phones. */

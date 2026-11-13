@@ -63,13 +63,19 @@ export async function render(figure) {
   const readout = document.createElement("p");
   readout.className = "scale-readout";
   plot.after(readout);
-  // The physical comparison, set as a pull quote with the last distance bold.
-  const quote = document.createElement("blockquote");
-  quote.className = "scale-quote";
-  const far = document.createElement("strong");
-  far.textContent = distance(1e11);
-  quote.append(`If $10,000 sat 1 inch from $0, $1 million would be ${distance(1e6)} away, $1 billion ${distance(1e9)}, and $100 billion about `, far, ".");
-  readout.after(quote);
+  // The physical comparison, behind a button: it opens full screen and
+  // types out, with the last distance in bold.
+  const tell = document.createElement("button");
+  tell.type = "button";
+  tell.className = "scale-tell";
+  tell.textContent = "Tell me in distance";
+  readout.after(tell);
+  const open = distanceQuote([
+    { text: `If $10,000 sat 1 inch from $0, $1 million would be ${distance(1e6)} away, $1 billion ${distance(1e9)}, and $100 billion about ` },
+    { text: distance(1e11), bold: true },
+    { text: "." },
+  ], reduceMotion);
+  tell.addEventListener("click", open);
 
   let t = 0;
   let width = 0;
@@ -187,4 +193,103 @@ export async function render(figure) {
 // "$10K", "$10K and $100K", "$10K, $100K and $1M".
 function list(items) {
   return items.length < 2 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+// --- "Tell me in distance" --------------------------------------------------------
+// A modal <dialog>: the browser dims the page behind it (::backdrop), keeps
+// focus inside, and closes it on Escape. The quote types out a character at a
+// time, pausing a beat at commas; a click or key press while it types shows
+// the rest at once. Screen readers get the whole sentence from the dialog's
+// label, not the typing. Under reduced motion it appears whole, without fades.
+// Returns the function that opens it.
+const TYPE_MS = 32;
+const PAUSE_MS = 260;
+const FADE_MS = 300;
+
+function distanceQuote(parts, reduceMotion) {
+  const full = parts.map((p) => p.text).join("");
+  const dialog = document.createElement("dialog");
+  dialog.className = "distance-dialog";
+  dialog.setAttribute("aria-label", full);
+  const quote = document.createElement("p");
+  quote.className = "distance-quote";
+  quote.setAttribute("aria-hidden", "true");
+  // Each part holds its typed text and, hidden, the rest of it, so the
+  // sentence takes its final size and line breaks from the start and nothing
+  // shifts while it types. The caret sits between the two.
+  const typed = [], rest = [];
+  const boxes = parts.map((p) => {
+    const box = document.createElement(p.bold ? "strong" : "span");
+    const a = document.createElement("span");
+    const b = document.createElement("span");
+    a.className = "typed";
+    b.className = "rest";
+    box.append(a, b);
+    typed.push(a);
+    rest.push(b);
+    return box;
+  });
+  const caret = document.createElement("span");
+  caret.className = "distance-caret";
+  quote.append(...boxes);
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "distance-close";
+  close.textContent = "Close";
+  dialog.append(quote, close);
+  document.body.append(dialog);
+
+  let timer = 0;
+  const show = (n) => {
+    // The first n characters of the sentence, split across the parts.
+    let left = n;
+    let active = parts.length - 1; // the part being typed, for the caret
+    parts.forEach((p, i) => {
+      const k = Math.min(p.text.length, Math.max(0, left));
+      typed[i].textContent = p.text.slice(0, k);
+      rest[i].textContent = p.text.slice(k);
+      if (k < p.text.length && active === parts.length - 1 && left >= 0) active = i;
+      left -= p.text.length;
+    });
+    if (caret.nextSibling !== rest[active]) boxes[active].insertBefore(caret, rest[active]);
+  };
+  const finish = () => {
+    clearTimeout(timer);
+    timer = 0;
+    show(full.length);
+    caret.classList.add("done");
+  };
+  const type = (n = 0) => {
+    show(n);
+    if (n >= full.length) return finish();
+    timer = setTimeout(() => type(n + 1), full[n - 1] === "," ? PAUSE_MS : TYPE_MS);
+  };
+
+  const hide = () => {
+    clearTimeout(timer);
+    timer = 0;
+    dialog.classList.remove("is-open");
+    if (reduceMotion) dialog.close();
+    else setTimeout(() => dialog.close(), FADE_MS);
+  };
+  close.addEventListener("click", hide);
+  // Escape closes at once by default; fade it out like the button does.
+  dialog.addEventListener("cancel", (e) => { e.preventDefault(); hide(); });
+  dialog.addEventListener("click", (e) => {
+    if (timer) finish(); // a click while typing shows the rest
+    else if (e.target === dialog) hide(); // a click on the dimmed page closes
+  });
+  dialog.addEventListener("keydown", (e) => {
+    if (timer && e.key !== "Tab" && e.key !== "Escape") { e.preventDefault(); finish(); }
+  });
+
+  return () => {
+    caret.classList.remove("done");
+    dialog.showModal();
+    close.focus();
+    if (reduceMotion) { dialog.classList.add("is-open"); return finish(); }
+    show(0);
+    requestAnimationFrame(() => dialog.classList.add("is-open"));
+    timer = setTimeout(() => type(0), FADE_MS + 150); // start once the fade has settled
+  };
 }
