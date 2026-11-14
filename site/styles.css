@@ -274,6 +274,17 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .chart figcaption { margin-bottom: var(--space-3); }
 .chart-title { margin: 0; font: 600 1.1875rem/var(--leading-tight) var(--font-sans); } /* 19px */
 @media (min-width: 720px) { .chart-title { font-size: var(--text-lg); } }
+/* Figure numbers ("fig 1"), counted in page order so they stay right when
+   charts move, and set flush right on the title's first line. The empty
+   alt text after "/" keeps screen readers from reading it into the title. */
+main { counter-reset: fig; }
+.chart { counter-increment: fig; }
+.chart-title { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+.chart-title::after {
+  content: "fig " counter(fig);
+  content: "fig " counter(fig) / "";
+  flex: none; font: var(--text-xs) var(--font-mono); color: var(--color-muted);
+}
 .chart-sub { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-source { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-error { font-size: var(--text-sm); color: var(--color-muted); font-style: italic; }
