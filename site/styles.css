@@ -285,6 +285,11 @@ main { counter-reset: fig; }
   content: "fig " counter(fig) / "";
   flex: none; font: var(--text-xs) var(--font-mono); color: var(--color-muted);
 }
+/* Each chart's description sits in a closed "About this chart" disclosure,
+   styled like "Show the data". */
+.chart-about { margin-top: var(--space-1); font-size: var(--text-sm); }
+.chart-about summary { cursor: pointer; color: var(--color-accent); width: max-content; padding: 6px 0; }
+.chart-about .chart-sub { margin-top: 0; }
 .chart-sub { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-source { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-muted); }
 .chart-error { font-size: var(--text-sm); color: var(--color-muted); font-style: italic; }
@@ -350,7 +355,7 @@ main { counter-reset: fig; }
 /* Touch screens: controls at least 40px tall, like the key buttons. */
 @media (pointer: coarse) {
   .chip, .segmented button { min-height: 40px; }
-  .chart-table summary { padding: 10px 0; }
+  .chart-table summary, .chart-about summary { padding: 10px 0; }
 }
 .globe-spin { margin-left: auto; }
 /* Line key above a timeline chart on narrow screens (end labels need 500px). */

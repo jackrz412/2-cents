@@ -63,21 +63,32 @@
       <figure class="chart" id="chart-1a">
         <figcaption>
           <h3 class="chart-title">Core costs have outrun overall prices and wages</h3>
-          <p class="chart-sub">Index, base-year average = 100, seasonally adjusted. Tap a category to hide or show it.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Index, base-year average = 100, seasonally adjusted.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Bureau of Labor Statistics, Consumer Price Index (CPI-U) and median usual weekly earnings (via FRED).</p>
       </figure>
+      {{section:affordability_2}}
       <figure class="chart" id="chart-1b">
         <figcaption>
           <h3 class="chart-title">What got pricier, and what got cheaper</h3>
-          <p class="chart-sub">Change in price by CPI category: the average of {{fact:prices_period}} against the base-year average</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Change in price by CPI category: the average of {{fact:prices_period}} against the base-year average</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Bureau of Labor Statistics, CPI-U, not seasonally adjusted. Wages: median usual weekly earnings, {{fact:wages_period}}.</p>
       </figure>
+      {{section:affordability_3}}
       <figure class="chart" id="map-1">
         <figcaption>
           <h3 class="chart-title">Where housing costs the most, relative to income</h3>
-          <p class="chart-sub">By state, American Community Survey {{fact:acs_vintage}} 5-year estimates</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">By state, American Community Survey {{fact:acs_vintage}} 5-year estimates</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Census Bureau, ACS tables B25077 (median home value), B19013 (median household income) and B25071 (rent as % of income).</p>
       </figure>
@@ -89,7 +100,10 @@
       <figure class="chart" id="scale-2">
         <figcaption>
           <h3 class="chart-title">How far apart a million and a billion are</h3>
-          <p class="chart-sub">Five amounts on one ordinary number line, starting at $0. Drag the slider, or press play, to zoom out.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Five amounts on one ordinary number line, starting at $0.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Round amounts for scale, not data.</p>
       </figure>
@@ -97,7 +111,10 @@
       <figure class="chart" id="chart-2a">
         <figcaption>
           <h3 class="chart-title">Who owns the household wealth</h3>
-          <p class="chart-sub">Share of total household net worth by wealth group, {{fact:wealth_first_period}} to {{fact:wealth_period}}</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Share of total household net worth by wealth group, {{fact:wealth_first_period}} to {{fact:wealth_period}}</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: Federal Reserve Board, Distributional Financial Accounts (via FRED).</p>
       </figure>
@@ -109,7 +126,10 @@
       <figure class="chart" id="chart-3e">
         <figcaption>
           <h3 class="chart-title">Who owns the debt</h3>
-          <p class="chart-sub">Gross federal debt by holder, {{fact:owners_period}}. Each square is 1% of the ${{fact:owners_total_tn}} trillion total. The government owes {{fact:owners_trust_pct}}% of it to its own trust funds, such as Social Security. These shares are of gross debt, so they differ from the {{fact:foreign_share}}% above, which is the foreign share of debt held by the public (trust funds left out).</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Gross federal debt by holder, {{fact:owners_period}}. Each square is 1% of the ${{fact:owners_total_tn}} trillion total. The government owes {{fact:owners_trust_pct}}% of it to its own trust funds, such as Social Security. These shares are of gross debt, so they differ from the {{fact:foreign_share}}% above, which is the foreign share of debt held by the public (trust funds left out).</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBATN, FDHBFRBN, FDHBFIN, FYGFDPUN). Domestic investors are the remainder: debt held by the public minus the Federal Reserve and foreign investors.</p>
       </figure>
@@ -117,7 +137,10 @@
       <figure class="chart" id="chart-3b">
         <figcaption>
           <h3 class="chart-title">Interest on the debt and national defense</h3>
-          <p class="chart-sub">Federal outlays by fiscal year, actual through FY{{fact:omb_latest_year}}. Switch between dollars (not adjusted for inflation) and % of GDP.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Federal outlays by fiscal year, actual through FY{{fact:omb_latest_year}}, in dollars (not adjusted for inflation) or as a % of GDP.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 3.1 (functions 050 and 900).</p>
       </figure>
@@ -125,21 +148,30 @@
       <figure class="chart" id="chart-3d">
         <figcaption>
           <h3 class="chart-title">The debt has grown past the size of the economy</h3>
-          <p class="chart-sub">Gross federal debt at the end of each quarter, and GDP (what the economy produces in a year), both in trillions of dollars, not adjusted for inflation. {{fact:debt_gross_period}}: ${{fact:debt_gross_tn}} trillion of debt, {{fact:debt_gross_pct_gdp}}% of GDP.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Gross federal debt at the end of each quarter, and GDP (what the economy produces in a year), both in trillions of dollars, not adjusted for inflation. {{fact:debt_gross_period}}: ${{fact:debt_gross_tn}} trillion of debt, {{fact:debt_gross_pct_gdp}}% of GDP.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Treasury, Fiscal Service, via FRED (GFDEBTN); U.S. Bureau of Economic Analysis via FRED (GDP).</p>
       </figure>
       <figure class="chart" id="chart-3a">
         <figcaption>
           <h3 class="chart-title">Federal debt held by the public, relative to the economy</h3>
-          <p class="chart-sub">% of GDP by fiscal year. Actual through FY{{fact:omb_latest_year}}; dashed line is CBO's baseline projection ({{fact:cbo_vintage}}), which assumes current law stays as it is.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">% of GDP by fiscal year. Actual through FY{{fact:omb_latest_year}}; dashed line is CBO's baseline projection ({{fact:cbo_vintage}}), which assumes current law stays as it is.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: Office of Management and Budget, Historical Tables, Table 7.1; Congressional Budget Office, The Budget and Economic Outlook ({{fact:cbo_vintage}}).</p>
       </figure>
       <figure class="chart chart--small" id="chart-3c">
         <figcaption>
           <h3 class="chart-title">The foreign share of the debt, and what it costs to borrow</h3>
-          <p class="chart-sub">Two panels on the same time axis: the foreign share of federal debt held by the public (quarterly), and the 10-year Treasury yield (monthly average)</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Two panels on the same time axis: the foreign share of federal debt held by the public (quarterly), and the 10-year Treasury yield (monthly average)</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: U.S. Treasury and Federal Reserve via FRED (FDHBFIN, FYGFDPUN); Federal Reserve Board via FRED (GS10).</p>
       </figure>
@@ -155,18 +187,24 @@
       <figure class="chart" id="globe">
         <figcaption>
           <h3 class="chart-title">How rich the US is, by world standards</h3>
-          <p class="chart-sub">Three views by country: GDP per person at purchasing power parity (living standards), total GDP (the size of each economy: what it produces in a year, not the wealth it has built up), and the share of people in extreme poverty. Drag to spin, scroll or pinch to zoom, hover or tap a country.</p>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Three views by country: GDP per person at purchasing power parity (living standards), total GDP (the size of each economy: what it produces in a year, not the wealth it has built up), and the share of people in extreme poverty.</p>
+          </details>
         </figcaption>
         <p class="chart-source">Source: World Bank, World Development Indicators (NY.GDP.PCAP.PP.KD, NY.GDP.MKTP.CD) and Poverty and Inequality Platform (SI.POV.DDAY). Country shapes: Natural Earth. Small countries such as Singapore don't show at this scale; they're in the table.</p>
       </figure>
       <figure class="chart chart--small" id="chart-4a">
         <figcaption>
           <h3 class="chart-title">Relative poverty in rich countries</h3>
-          <p class="chart-sub">Share of people with disposable income below half their country's median, latest year available ({{fact:oecd_count}} OECD countries)</p>
-          <div class="chart-read">
-            <p><strong>How to read it:</strong> each bar is one country. Line up everyone in that country by income after taxes and government benefits, and find the person in the middle. If that middle income were $100, anyone living on less than $50 counts as relatively poor. A longer bar means more people far behind the typical person in their own country.</p>
-            <p>It compares people with their neighbors, not with the rest of the world: someone counted here can still be well off by global standards. In the US, {{fact:us_relative_poverty}}% of people fall that far behind the middle.</p>
-          </div>
+          <details class="chart-about">
+            <summary>About this chart</summary>
+            <p class="chart-sub">Share of people with disposable income below half their country's median, latest year available ({{fact:oecd_count}} OECD countries)</p>
+            <div class="chart-read">
+              <p><strong>How to read it:</strong> each bar is one country. Line up everyone in that country by income after taxes and government benefits, and find the person in the middle. If that middle income were $100, anyone living on less than $50 counts as relatively poor. A longer bar means more people far behind the typical person in their own country.</p>
+              <p>It compares people with their neighbors, not with the rest of the world: someone counted here can still be well off by global standards. In the US, {{fact:us_relative_poverty}}% of people fall that far behind the middle.</p>
+            </div>
+          </details>
         </figcaption>
         <p class="chart-source">Source: OECD Income Distribution Database (poverty rate after taxes and transfers, 50% of median).</p>
       </figure>
